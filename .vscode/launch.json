@@ -1,0 +1,14 @@
+{
+    // Use IntelliSense para saber los atributos posibles.
+    // Mantenga el puntero para ver las descripciones de los existentes atributos.
+    // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "editor-browser",
+            "request": "launch",
+            "name": "Open wireframe_prototipo_orientacion_vocacional.html",
+            "url": "file:///c%3A/Users/ferna/Downloads/Dise%C3%B1o%20prototipo/wireframe_prototipo_orientacion_vocacional.html"
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+# Entornos virtuales de Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Variables de entorno
+.env
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# Configuración local
+.DS_Store
+Thumbs.db
