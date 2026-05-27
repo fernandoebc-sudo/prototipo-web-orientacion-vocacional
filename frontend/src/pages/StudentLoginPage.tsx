@@ -80,12 +80,12 @@ function StudentLoginPage() {
               />
             </div>
 
-            <button
-              type="button"
-              className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700"
-            >
+            <Link
+              to="/cuestionario"
+              className="block w-full rounded-xl bg-blue-600 px-5 py-3 text-center font-semibold text-white shadow-sm transition hover:bg-blue-700"
+             >
               Ingresar al cuestionario
-            </button>
+             </Link>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-500">
