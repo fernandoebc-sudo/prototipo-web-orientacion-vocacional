@@ -376,12 +376,12 @@ function QuestionnairePage() {
                   Siguiente sección
                 </button>
               ) : (
-                <button
-                  type="button"
-                  className="rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                <Link
+                  to="/resultado"
+                  className="rounded-xl bg-emerald-600 px-5 py-3 text-center font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                 >
                   Generar recomendación
-                </button>
+                </Link>
               )}
             </div>
           </section>

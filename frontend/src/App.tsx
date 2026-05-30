@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage'
 import StudentLoginPage from './pages/StudentLoginPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import QuestionnairePage from './pages/QuestionnairePage'
+import ResultPage from './pages/ResultPage'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/login-estudiante" element={<StudentLoginPage />} />
         <Route path="/login-admin" element={<AdminLoginPage />} />
         <Route path="/cuestionario" element={<QuestionnairePage />} />
+        <Route path="/resultado" element={<ResultPage />} />
       </Routes>
     </BrowserRouter>
   )
