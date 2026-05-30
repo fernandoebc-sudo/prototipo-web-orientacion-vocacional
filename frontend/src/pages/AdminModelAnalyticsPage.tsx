@@ -1,4 +1,5 @@
-    import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import AdminSidebar from '../components/AdminSidebar'
 
 const modelMetrics = [
   {
@@ -53,59 +54,7 @@ const confusionRows = [
 function AdminModelAnalyticsPage() {
   return (
     <main className="min-h-screen bg-slate-100 text-slate-800">
-      <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-slate-800 bg-slate-950 px-5 py-6 text-white lg:block">
-        <div>
-          <h1 className="text-xl font-bold">OrientaTech</h1>
-          <p className="mt-1 text-sm text-slate-400">Panel administrativo</p>
-        </div>
-
-        <nav className="mt-10 space-y-3">
-          <Link
-            to="/admin/dashboard"
-            className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
-          >
-            Resumen general
-          </Link>
-
-          <Link
-            to="/admin/registros"
-            className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
-          >
-            Registros
-          </Link>
-
-          <Link
-            to="/admin/estadisticas"
-            className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
-          >
-            Estadísticas
-          </Link>
-
-          <Link
-            to="/admin/analitica-modelos"
-            className="block rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300"
-          >
-            Analítica de modelos
-          </Link>
-
-          <Link
-            to="/admin/exportacion"
-            className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
-          >
-            Exportación
-          </Link>
-        </nav>
-
-        <div className="absolute bottom-6 left-5 right-5">
-          <Link
-            to="/"
-            className="block rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-slate-300 transition hover:bg-white/5"
-          >
-            Cerrar sesión
-          </Link>
-        </div>
-      </aside>
-
+      <AdminSidebar />
       <section className="lg:pl-72">
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
