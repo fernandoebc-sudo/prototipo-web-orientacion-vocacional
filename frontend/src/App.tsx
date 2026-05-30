@@ -8,6 +8,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import AdminRecordsPage from './pages/AdminRecordsPage'
 import AdminStatsPage from './pages/AdminStatsPage'
 import AdminModelAnalyticsPage from './pages/AdminModelAnalyticsPage'
+import AdminExportPage from './pages/AdminExportPage'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/admin/registros" element={<AdminRecordsPage />} />
         <Route path="/admin/estadisticas" element={<AdminStatsPage />} />
         <Route path="/admin/analitica-modelos" element={<AdminModelAnalyticsPage />} />
+        <Route path="/admin/exportacion" element={<AdminExportPage />} />
       </Routes>
     </BrowserRouter>
   )
