@@ -7,6 +7,7 @@ import ResultPage from './pages/ResultPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AdminRecordsPage from './pages/AdminRecordsPage'
 import AdminStatsPage from './pages/AdminStatsPage'
+import AdminModelAnalyticsPage from './pages/AdminModelAnalyticsPage'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/registros" element={<AdminRecordsPage />} />
         <Route path="/admin/estadisticas" element={<AdminStatsPage />} />
+        <Route path="/admin/analitica-modelos" element={<AdminModelAnalyticsPage />} />
       </Routes>
     </BrowserRouter>
   )
