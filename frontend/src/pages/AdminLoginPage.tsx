@@ -22,7 +22,7 @@ function AdminLoginPage() {
 
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">
             El administrador puede revisar registros, resultados generados y la
-            comparación entre los modelos XGBoost y MLP integrados al sistema.
+            comparación entre los dos modelos de Machine Learning integrados al sistema.
           </p>
 
           <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">

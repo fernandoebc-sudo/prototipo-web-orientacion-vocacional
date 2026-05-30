@@ -77,7 +77,7 @@ function HomePage() {
               <div>
                 <div className="mb-2 flex justify-between text-sm">
                   <span className="font-medium text-slate-700">
-                    Modelo XGBoost
+                    Modelo 1
                   </span>
                   <span className="font-semibold text-blue-700">84%</span>
                 </div>
@@ -88,7 +88,7 @@ function HomePage() {
 
               <div>
                 <div className="mb-2 flex justify-between text-sm">
-                  <span className="font-medium text-slate-700">Modelo MLP</span>
+                  <span className="font-medium text-slate-700">Modelo 2</span>
                   <span className="font-semibold text-emerald-600">79%</span>
                 </div>
                 <div className="h-3 overflow-hidden rounded-full bg-slate-200">
