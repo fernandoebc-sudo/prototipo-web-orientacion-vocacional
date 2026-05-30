@@ -88,9 +88,12 @@ function AdminModelAnalyticsPage() {
             Analítica de modelos
           </Link>
 
-          <button className="w-full rounded-2xl px-4 py-3 text-left text-sm font-medium text-slate-300 transition hover:bg-white/5">
+          <Link
+            to="/admin/exportacion"
+            className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+          >
             Exportación
-          </button>
+          </Link>
         </nav>
 
         <div className="absolute bottom-6 left-5 right-5">
