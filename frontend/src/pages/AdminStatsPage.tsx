@@ -2,20 +2,20 @@ import { Link } from 'react-router-dom'
 import AdminSidebar from '../components/AdminSidebar'
 
 const areaStats = [
-  { area: 'Ingeniería y Tecnología', value: 35, color: 'bg-blue-600' },
-  { area: 'Ciencias de la salud', value: 22, color: 'bg-emerald-500' },
-  { area: 'Humanísticas y sociales', value: 18, color: 'bg-slate-500' },
-  { area: 'Administrativas y contables', value: 12, color: 'bg-blue-400' },
-  { area: 'Artísticas', value: 7, color: 'bg-emerald-400' },
-  { area: 'Ciencias exactas y agrarias', value: 4, color: 'bg-slate-400' },
-  { area: 'Defensa y seguridad', value: 2, color: 'bg-blue-300' },
+  { area: 'Ingeniería y Tecnología', value: 35, color: 'bg-blue-600', width: 'w-[35%]' },
+  { area: 'Ciencias de la salud', value: 22, color: 'bg-emerald-500', width: 'w-[22%]' },
+  { area: 'Humanísticas y sociales', value: 18, color: 'bg-slate-500', width: 'w-[18%]' },
+  { area: 'Administrativas y contables', value: 12, color: 'bg-blue-400', width: 'w-[12%]' },
+  { area: 'Artísticas', value: 7, color: 'bg-emerald-400', width: 'w-[7%]' },
+  { area: 'Ciencias exactas y agrarias', value: 4, color: 'bg-slate-400', width: 'w-[4%]' },
+  { area: 'Defensa y seguridad', value: 2, color: 'bg-blue-300', width: 'w-[2%]' },
 ]
 
 const institutionStats = [
-  { type: 'Pública', value: 58 },
-  { type: 'Privada', value: 25 },
-  { type: 'Fiscomisional', value: 12 },
-  { type: 'Municipal', value: 5 },
+  { type: 'Pública', value: 58, width: 'w-[58%]' },
+  { type: 'Privada', value: 25, width: 'w-[25%]' },
+  { type: 'Fiscomisional', value: 12, width: 'w-[12%]' },
+  { type: 'Municipal', value: 5, width: 'w-[5%]' },
 ]
 
 function AdminStatsPage() {
@@ -111,8 +111,7 @@ function AdminStatsPage() {
                     </div>
                     <div className="h-4 overflow-hidden rounded-full bg-slate-200">
                       <div
-                        className={`h-full rounded-full ${item.color}`}
-                        style={{ width: `${item.value}%` }}
+                        className={`h-full rounded-full ${item.color} ${item.width}`}
                       ></div>
                     </div>
                   </div>
@@ -143,8 +142,7 @@ function AdminStatsPage() {
                       </div>
                       <div className="h-3 overflow-hidden rounded-full bg-slate-200">
                         <div
-                          className="h-full rounded-full bg-emerald-500"
-                          style={{ width: `${item.value}%` }}
+                          className={`h-full rounded-full bg-emerald-500 ${item.width}`}
                         ></div>
                       </div>
                     </div>

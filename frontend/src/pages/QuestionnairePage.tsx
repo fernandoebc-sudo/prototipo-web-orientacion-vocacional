@@ -82,6 +82,7 @@ function QuestionnairePage() {
   const [currentStep, setCurrentStep] = useState(0)
 
   const progress = ((currentStep + 1) / steps.length) * 100
+  const progressWidths = ['w-1/4', 'w-2/4', 'w-3/4', 'w-full']
 
   const goNext = () => {
     if (currentStep < steps.length - 1) {
@@ -141,8 +142,9 @@ function QuestionnairePage() {
 
           <div className="h-3 overflow-hidden rounded-full bg-slate-200">
             <div
-              className="h-full rounded-full bg-blue-600 transition-all"
-              style={{ width: `${progress}%` }}
+              className={`h-full rounded-full bg-blue-600 transition-all ${
+                progressWidths[currentStep]
+              }`}
             ></div>
           </div>
         </div>
