@@ -5,6 +5,7 @@ import AdminLoginPage from './pages/AdminLoginPage'
 import QuestionnairePage from './pages/QuestionnairePage'
 import ResultPage from './pages/ResultPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
+import AdminRecordsPage from './pages/AdminRecordsPage'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/cuestionario" element={<QuestionnairePage />} />
         <Route path="/resultado" element={<ResultPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/registros" element={<AdminRecordsPage />} />
       </Routes>
     </BrowserRouter>
   )
