@@ -6,6 +6,7 @@ import QuestionnairePage from './pages/QuestionnairePage'
 import ResultPage from './pages/ResultPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AdminRecordsPage from './pages/AdminRecordsPage'
+import AdminStatsPage from './pages/AdminStatsPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/resultado" element={<ResultPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/registros" element={<AdminRecordsPage />} />
+        <Route path="/admin/estadisticas" element={<AdminStatsPage />} />
       </Routes>
     </BrowserRouter>
   )

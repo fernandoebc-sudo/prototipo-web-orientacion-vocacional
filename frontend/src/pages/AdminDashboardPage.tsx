@@ -21,9 +21,12 @@ function AdminDashboardPage() {
             Registros
             </Link>
 
-          <button className="w-full rounded-2xl px-4 py-3 text-left text-sm font-medium text-slate-300 transition hover:bg-white/5">
+            <Link
+            to="/admin/estadisticas"
+            className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+            >
             Estadísticas
-          </button>
+            </Link>
 
           <button className="w-full rounded-2xl px-4 py-3 text-left text-sm font-medium text-slate-300 transition hover:bg-white/5">
             Analítica de modelos
