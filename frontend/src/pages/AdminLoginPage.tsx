@@ -91,12 +91,12 @@ function AdminLoginPage() {
               />
             </div>
 
-            <button
-              type="button"
-              className="w-full rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+            <Link
+              to="/admin/dashboard"
+              className="block w-full rounded-xl bg-emerald-600 px-5 py-3 text-center font-semibold text-white shadow-sm transition hover:bg-emerald-700"
             >
               Ingresar al panel
-            </button>
+            </Link>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-500">
