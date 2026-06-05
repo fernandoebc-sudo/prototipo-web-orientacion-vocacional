@@ -1,97 +1,181 @@
+import {
+  ArrowLeft,
+  BookOpenCheck,
+  BrainCircuit,
+  GraduationCap,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 function StudentLoginPage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800">
-      <section className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 items-center gap-10 px-6 py-12 lg:grid-cols-2">
-        <div>
+    <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
+      <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-100 blur-3xl"></div>
+      <div className="absolute -bottom-40 right-1/4 h-96 w-96 rounded-full bg-emerald-100 blur-3xl"></div>
+
+      <header className="relative z-10 border-b border-slate-200/80 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <BrainCircuit size={28} />
+            </div>
+
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950">
+                Voc<span className="text-blue-600">AI</span>
+              </h1>
+              <p className="text-sm text-slate-500">
+                Acceso para estudiantes
+              </p>
+            </div>
+          </div>
+
           <Link
             to="/"
-            className="inline-flex text-sm font-medium text-blue-700 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
           >
-            ← Volver al inicio
+            <ArrowLeft size={18} />
+            Volver
           </Link>
+        </div>
+      </header>
 
-          <span className="mt-8 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
-            Acceso para estudiantes
+      <section className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-7 shadow-2xl shadow-slate-200">
+          <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+            <GraduationCap size={16} />
+            Ingreso del estudiante
           </span>
 
-          <h1 className="mt-6 text-4xl font-bold leading-tight text-slate-900 md:text-5xl">
-            Ingresa para iniciar tu orientación académica
-          </h1>
+          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-slate-950">
+            Inicia sesión para responder el cuestionario
+          </h2>
 
-          <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
-            Accede al cuestionario académico-vocacional y recibe una recomendación
-            por áreas basada en tus intereses, habilidades y desempeño percibido.
+          <p className="mt-3 leading-7 text-slate-600">
+            Accede al formulario académico-vocacional y completa las secciones
+            necesarias para obtener una recomendación por áreas.
           </p>
 
-          <div className="mt-8 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-2xl font-bold text-blue-700">1</p>
-              <p className="mt-1 text-sm text-slate-600">Responde el cuestionario</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-2xl font-bold text-blue-700">2</p>
-              <p className="mt-1 text-sm text-slate-600">Procesa tu perfil</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-2xl font-bold text-emerald-600">3</p>
-              <p className="mt-1 text-sm text-slate-600">Muestra tu resultado</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-          <div className="mb-8 rounded-2xl bg-blue-50 p-5">
-            <p className="text-sm font-medium text-blue-700">
-              Cuestionario académico-vocacional
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">
-              Inicio de sesión
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Usa tus credenciales asignadas para acceder al cuestionario. Esta
-              información permite mantener un registro seguro de tus respuestas.
-            </p>
-          </div>
-
-          <form className="space-y-5">
+          <form className="mt-8 space-y-5">
             <div>
-              <label className="text-sm font-semibold text-slate-700">
+              <label
+                htmlFor="student-email"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Usuario o correo
               </label>
-              <input
-                type="text"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                placeholder="estudiante@correo.com"
-              />
+
+              <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-400 focus-within:bg-white">
+                <Mail className="text-slate-400" size={20} />
+                <input
+                  id="student-email"
+                  type="text"
+                  placeholder="estudiante@correo.com"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-slate-700">
+              <label
+                htmlFor="student-password"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Contraseña
               </label>
-              <input
-                type="password"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                placeholder="********"
-              />
+
+              <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-400 focus-within:bg-white">
+                <LockKeyhole className="text-slate-400" size={20} />
+                <input
+                  id="student-password"
+                  type="password"
+                  placeholder="Ingresa tu contraseña"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
             </div>
 
             <Link
               to="/cuestionario"
-              className="block w-full rounded-xl bg-blue-600 px-5 py-3 text-center font-semibold text-white shadow-sm transition hover:bg-blue-700"
-             >
+              className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
+            >
+              <BookOpenCheck size={22} />
               Ingresar al cuestionario
-             </Link>
+            </Link>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            El resultado será una guía inicial y no reemplaza el acompañamiento
-            de un orientador o docente.
+          <p className="mt-5 text-sm leading-6 text-slate-500">
+            El resultado tiene fines orientativos y debe complementarse con el
+            acompañamiento de docentes, tutores u orientadores.
           </p>
+        </div>
+
+        <div className="space-y-5">
+          <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-7">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
+                <Sparkles size={24} />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold text-slate-950">
+                  Flujo de orientación
+                </h3>
+                <p className="mt-2 leading-7 text-slate-600">
+                  El proceso está organizado para que el estudiante responda de
+                  forma sencilla y comprenda el resultado obtenido.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-blue-700">Paso 1</p>
+              <h4 className="mt-1 font-bold text-slate-950">
+                Responder el cuestionario
+              </h4>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Se recopilan datos generales, desempeño académico, intereses,
+                habilidades y seguridad vocacional.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-emerald-700">Paso 2</p>
+              <h4 className="mt-1 font-bold text-slate-950">
+                Procesar el perfil
+              </h4>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Las respuestas se organizan para generar una recomendación
+                académica por áreas.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-blue-700">Paso 3</p>
+              <h4 className="mt-1 font-bold text-slate-950">
+                Revisar el resultado
+              </h4>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Se muestra el área sugerida, afinidad, comparación entre modelos
+                y explicación breve.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-1 text-emerald-600" size={22} />
+              <p className="text-sm leading-6 text-emerald-800">
+                La información se orienta al apoyo académico y no debe incluir
+                datos directamente identificables del estudiante.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
     </main>
