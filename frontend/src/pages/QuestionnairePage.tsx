@@ -4,12 +4,9 @@ import {
   BrainCircuit,
   CheckCircle2,
   GraduationCap,
-  Layers3,
   Lightbulb,
-  LineChart,
   School,
   Sparkles,
-  Target,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -17,53 +14,102 @@ import { Link } from 'react-router-dom'
 const steps = [
   {
     title: 'Datos generales',
-    description: 'Información básica no identificable.',
+    description: 'Consentimiento e información básica no identificable.',
     icon: School,
   },
   {
-    title: 'Desempeño académico',
-    description: 'Percepción del rendimiento escolar.',
+    title: 'Desempeño e intereses',
+    description: 'Áreas de mejor desempeño e intereses principales.',
     icon: BookOpenCheck,
   },
   {
-    title: 'Intereses y habilidades',
-    description: 'Afinidad con actividades y capacidades.',
+    title: 'Habilidades y preferencias',
+    description: 'Habilidades personales y actividades preferidas.',
     icon: Lightbulb,
   },
-  {
-    title: 'Seguridad vocacional',
-    description: 'Preferencias y nivel de decisión.',
-    icon: Target,
-  },
 ]
 
-const academicItems = [
+const progressWidths = ['w-1/3', 'w-2/3', 'w-full']
+
+const genderOptions = [
+  'Masculino',
+  'Femenino',
+  'Prefiero no decirlo',
+  'Otro',
+]
+
+const orientationOptions = [
+  'Sí',
+  'No',
+  'No estoy seguro/a',
+]
+
+const academicPerformanceOptions = [
   'Matemáticas y razonamiento lógico',
-  'Comunicación y lenguaje',
-  'Ciencias naturales',
-  'Ciencias sociales',
+  'Física, química o biología',
+  'Lengua, lectura y comunicación',
+  'Ciencias sociales e historia',
+  'Informática, tecnología o programación',
+  'Arte, diseño o creatividad',
+  'Actividades prácticas, experimentos o trabajo fuera del aula',
 ]
 
-const interestItems = [
-  'Resolver problemas tecnológicos',
-  'Ayudar o cuidar a otras personas',
-  'Organizar información o recursos',
-  'Crear contenido artístico o visual',
-  'Analizar datos o patrones',
+const interestOptions = [
+  'Organizar proyectos, recursos o emprendimientos',
+  'Enseñar, orientar o comunicar ideas',
+  'Crear diseños, contenidos o expresiones artísticas',
+  'Cuidar la salud y bienestar de las personas',
+  'Resolver problemas con tecnología o herramientas digitales',
+  'Participar en seguridad, prevención o emergencias',
+  'Investigar datos, naturaleza o fenómenos científicos',
 ]
 
-const scaleOptions = ['Muy bajo', 'Bajo', 'Medio', 'Alto', 'Muy alto']
+const skillOptions = [
+  'Organización y planificación',
+  'Comunicación',
+  'Creatividad',
+  'Empatía o apoyo a otras personas',
+  'Solución de problemas técnicos',
+  'Uso de herramientas digitales',
+  'Autocontrol y seguimiento de normas',
+  'Análisis de datos u observación',
+]
+
+const preferredActivityOptions = [
+  'Resolver ejercicios, problemas o retos',
+  'Ayudar o acompañar a otras personas',
+  'Crear dibujos, diseños, videos o ideas nuevas',
+  'Buscar información, investigar o analizar temas',
+  'Organizar tareas, materiales o actividades',
+  'Usar computadoras, aplicaciones o herramientas tecnológicas',
+  'Hacer actividades prácticas, experimentos o trabajos fuera del aula',
+  'Seguir instrucciones, normas o procedimientos',
+]
+
+type MultiSelectField =
+  | 'academicPerformance'
+  | 'interests'
+  | 'skills'
+  | 'preferredActivities'
 
 function QuestionnairePage() {
   const [currentStep, setCurrentStep] = useState(0)
-  const CurrentIcon = steps[currentStep].icon
+  const [answers, setAnswers] = useState({
+    consent: '',
+    gender: '',
+    orientation: '',
+    academicPerformance: [] as string[],
+    interests: [] as string[],
+    skills: [] as string[],
+    preferredActivities: [] as string[],
+  })
 
-  const progressWidths = ['w-1/4', 'w-2/4', 'w-3/4', 'w-full']
+  const CurrentIcon = steps[currentStep].icon
+  const progressPercentage = Math.round(((currentStep + 1) / steps.length) * 100)
 
   const goNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
-      return
     }
   }
 
@@ -72,6 +118,49 @@ function QuestionnairePage() {
       setCurrentStep(currentStep - 1)
     }
   }
+
+  const selectSingleAnswer = (field: 'consent' | 'gender' | 'orientation', value: string) => {
+    setAnswers((previousAnswers) => ({
+      ...previousAnswers,
+      [field]: value,
+    }))
+  }
+
+  const toggleMultiAnswer = (field: MultiSelectField, value: string) => {
+    setAnswers((previousAnswers) => {
+      const currentValues = previousAnswers[field]
+
+      if (currentValues.includes(value)) {
+        return {
+          ...previousAnswers,
+          [field]: currentValues.filter((item) => item !== value),
+        }
+      }
+
+      if (currentValues.length >= 3) {
+        return previousAnswers
+      }
+
+      return {
+        ...previousAnswers,
+        [field]: [...currentValues, value],
+      }
+    })
+  }
+
+  const getSingleOptionClass = (selected: boolean) =>
+    `rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+      selected
+        ? 'border-blue-300 bg-blue-50 text-blue-700'
+        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-200 hover:bg-blue-50'
+    }`
+
+  const getMultiOptionClass = (selected: boolean) =>
+    `rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+      selected
+        ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-200 hover:bg-emerald-50'
+    }`
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
@@ -125,7 +214,7 @@ function QuestionnairePage() {
             <div className="mt-6">
               <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500">
                 <span>Avance del cuestionario</span>
-                <span>{(currentStep + 1) * 25}%</span>
+                <span>{progressPercentage}%</span>
               </div>
 
               <div className="h-3 overflow-hidden rounded-full bg-slate-200">
@@ -189,7 +278,8 @@ function QuestionnairePage() {
               <GraduationCap className="mt-1 text-emerald-600" size={22} />
               <p className="text-sm leading-6 text-emerald-800">
                 No existen respuestas correctas o incorrectas. La información se
-                usa solo para orientar el resultado.
+                utiliza únicamente con fines académicos y no solicita datos
+                directamente identificables.
               </p>
             </div>
           </div>
@@ -219,182 +309,195 @@ function QuestionnairePage() {
 
           <div className="mt-7">
             {currentStep === 0 && (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="space-y-7">
                 <div>
-                  <label
-                    htmlFor="age"
-                    className="text-sm font-semibold text-slate-700"
-                  >
-                    Edad
-                  </label>
-                  <select
-                    id="age"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:bg-white"
-                  >
-                    <option>Selecciona una opción</option>
-                    <option>16 años</option>
-                    <option>17 años</option>
-                    <option>18 años o más</option>
-                  </select>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    ¿Aceptas participar voluntariamente?
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    La participación es voluntaria y la información será utilizada
+                    únicamente con fines académicos.
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {['Sí, acepto participar', 'No acepto participar'].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => selectSingleAnswer('consent', option)}
+                        className={getSingleOptionClass(answers.consent === option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="institution"
-                    className="text-sm font-semibold text-slate-700"
-                  >
-                    Tipo de institución
-                  </label>
-                  <select
-                    id="institution"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:bg-white"
-                  >
-                    <option>Selecciona una opción</option>
-                    <option>Pública</option>
-                    <option>Privada</option>
-                    <option>Fiscomisional</option>
-                    <option>Municipal</option>
-                  </select>
+                  <h3 className="text-lg font-bold text-slate-900">Género</h3>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {genderOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => selectSingleAnswer('gender', option)}
+                        className={getSingleOptionClass(answers.gender === option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label
-                    htmlFor="orientation"
-                    className="text-sm font-semibold text-slate-700"
-                  >
-                    ¿Has recibido orientación vocacional previamente?
-                  </label>
-                  <select
-                    id="orientation"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:bg-white"
-                  >
-                    <option>Selecciona una opción</option>
-                    <option>Sí</option>
-                    <option>No</option>
-                    <option>No estoy seguro/a</option>
-                  </select>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    ¿Has recibido orientación vocacional o profesional?
+                  </h3>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                    {orientationOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => selectSingleAnswer('orientation', option)}
+                        className={getSingleOptionClass(answers.orientation === option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             {currentStep === 1 && (
-              <div>
-                <p className="text-sm leading-6 text-slate-600">
-                  Indica cómo percibes tu desempeño en las siguientes áreas
-                  académicas.
-                </p>
-
-                <div className="mt-6 space-y-4">
-                  {academicItems.map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
-                    >
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <p className="font-semibold text-slate-800">{item}</p>
-
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                          {scaleOptions.map((option) => (
-                            <button
-                              key={option}
-                              type="button"
-                              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+              <div className="space-y-7">
+                <div>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        ¿En qué asignaturas o áreas consideras que tienes mejor desempeño?
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Selecciona máximo 3 opciones.
+                      </p>
                     </div>
-                  ))}
+
+                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+                      {answers.academicPerformance.length}/3 seleccionadas
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {academicPerformanceOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleMultiAnswer('academicPerformance', option)}
+                        className={getMultiOptionClass(
+                          answers.academicPerformance.includes(option),
+                        )}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        ¿Qué tipo de actividades te generan mayor interés?
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Selecciona máximo 3 opciones.
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+                      {answers.interests.length}/3 seleccionadas
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {interestOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleMultiAnswer('interests', option)}
+                        className={getMultiOptionClass(answers.interests.includes(option))}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             {currentStep === 2 && (
-              <div>
-                <p className="text-sm leading-6 text-slate-600">
-                  Selecciona el nivel de afinidad que tienes con las siguientes
-                  actividades.
-                </p>
-
-                <div className="mt-6 grid grid-cols-1 gap-4">
-                  {interestItems.map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
-                    >
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <p className="font-semibold text-slate-800">{item}</p>
-
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                          {scaleOptions.map((option) => (
-                            <button
-                              key={option}
-                              type="button"
-                              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+              <div className="space-y-7">
+                <div>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        ¿Qué habilidades consideras que se relacionan más contigo?
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Selecciona máximo 3 opciones.
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {currentStep === 3 && (
-              <div className="space-y-5">
-                <div>
-                  <label
-                    htmlFor="main-area"
-                    className="text-sm font-semibold text-slate-700"
-                  >
-                    Área de mayor interés actual
-                  </label>
-                  <select
-                    id="main-area"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:bg-white"
-                  >
-                    <option>Selecciona una opción</option>
-                    <option>Ingeniería y Tecnología</option>
-                    <option>Ciencias de la salud</option>
-                    <option>Administrativas y contables</option>
-                    <option>Humanísticas y sociales</option>
-                    <option>Artísticas</option>
-                    <option>Ciencias exactas y agrarias</option>
-                    <option>Defensa y seguridad</option>
-                  </select>
+                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+                      {answers.skills.length}/3 seleccionadas
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {skillOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleMultiAnswer('skills', option)}
+                        className={getMultiOptionClass(answers.skills.includes(option))}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="security"
-                    className="text-sm font-semibold text-slate-700"
-                  >
-                    Nivel de seguridad sobre tu elección
-                  </label>
-                  <select
-                    id="security"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:bg-white"
-                  >
-                    <option>Selecciona una opción</option>
-                    <option>Bajo</option>
-                    <option>Medio</option>
-                    <option>Alto</option>
-                  </select>
-                </div>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        ¿Qué tipo de actividades prefieres realizar?
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Selecciona máximo 3 opciones.
+                      </p>
+                    </div>
 
-                <div className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
-                  <div className="flex items-start gap-3">
-                    <Layers3 className="mt-1 text-blue-600" size={22} />
-                    <p className="text-sm leading-6 text-slate-700">
-                      Esta sección permite reconocer la preferencia declarada
-                      del estudiante y contrastarla con las variables recogidas
-                      en las secciones anteriores.
-                    </p>
+                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+                      {answers.preferredActivities.length}/3 seleccionadas
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {preferredActivityOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleMultiAnswer('preferredActivities', option)}
+                        className={getMultiOptionClass(
+                          answers.preferredActivities.includes(option),
+                        )}
+                      >
+                        {option}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
