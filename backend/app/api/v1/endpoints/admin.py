@@ -1,9 +1,16 @@
 from fastapi import APIRouter
 
+from app.schemas.admin import (
+    AdminRecordsResponse,
+    AdminStatsResponse,
+    ExportResponse,
+    ModelAnalyticsResponse,
+)
+
 router = APIRouter(prefix="/admin", tags=["Administración"])
 
 
-@router.get("/records")
+@router.get("/records", response_model=AdminRecordsResponse)
 def get_records():
     return {
         "status": "ok",
@@ -25,7 +32,7 @@ def get_records():
     }
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=AdminStatsResponse)
 def get_stats():
     return {
         "status": "ok",
@@ -35,7 +42,7 @@ def get_stats():
     }
 
 
-@router.get("/model-analytics")
+@router.get("/model-analytics", response_model=ModelAnalyticsResponse)
 def get_model_analytics():
     return {
         "status": "ok",
@@ -57,7 +64,7 @@ def get_model_analytics():
     }
 
 
-@router.get("/export")
+@router.get("/export", response_model=ExportResponse)
 def export_data():
     return {
         "status": "ok",

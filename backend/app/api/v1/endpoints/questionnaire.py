@@ -1,9 +1,15 @@
 from fastapi import APIRouter
 
+from app.schemas.questionnaire import (
+    QuestionnaireResponse,
+    QuestionnaireSubmitRequest,
+    QuestionnaireSubmitResponse,
+)
+
 router = APIRouter(prefix="/questionnaire", tags=["Cuestionario"])
 
 
-@router.get("/questions")
+@router.get("/questions", response_model=QuestionnaireResponse)
 def get_questions():
     return {
         "status": "ok",
@@ -43,8 +49,8 @@ def get_questions():
     }
 
 
-@router.post("/submit")
-def submit_questionnaire():
+@router.post("/submit", response_model=QuestionnaireSubmitResponse)
+def submit_questionnaire(data: QuestionnaireSubmitRequest):
     return {
         "status": "ok",
         "message": "Respuestas recibidas de forma referencial",

@@ -1,10 +1,12 @@
 from fastapi import APIRouter
 
+from app.schemas.auth import LoginRequest, LoginResponse
+
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 
-@router.post("/student-login")
-def student_login():
+@router.post("/student-login", response_model=LoginResponse)
+def student_login(data: LoginRequest):
     return {
         "status": "ok",
         "role": "student",
@@ -12,8 +14,8 @@ def student_login():
     }
 
 
-@router.post("/admin-login")
-def admin_login():
+@router.post("/admin-login", response_model=LoginResponse)
+def admin_login(data: LoginRequest):
     return {
         "status": "ok",
         "role": "admin",

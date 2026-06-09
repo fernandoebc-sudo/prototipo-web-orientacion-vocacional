@@ -1,9 +1,11 @@
 from fastapi import APIRouter
 
+from app.schemas.results import StudentResultResponse
+
 router = APIRouter(prefix="/results", tags=["Resultados"])
 
 
-@router.get("/student-result")
+@router.get("/student-result", response_model=StudentResultResponse)
 def get_student_result():
     return {
         "status": "ok",
