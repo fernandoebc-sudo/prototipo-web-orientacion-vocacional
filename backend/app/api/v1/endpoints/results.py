@@ -1,10 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from app.db.database import get_db
 from app.schemas.questionnaire import QuestionnaireSubmitRequest
-from app.schemas.results import StudentResultResponse
+from app.schemas.results import StoredStudentResultResponse, StudentResultResponse
 from app.services.recommendation_service import (
-    generate_reference_recommendation,
     get_reference_student_result,
+    save_recommendation_result,
 )
 
 router = APIRouter(prefix="/results", tags=["Resultados"])
@@ -15,6 +17,9 @@ def get_student_result():
     return get_reference_student_result()
 
 
-@router.post("/recommendation", response_model=StudentResultResponse)
-def generate_recommendation(data: QuestionnaireSubmitRequest):
-    return generate_reference_recommendation(data)
+@router.post("/recommendation", response_model=StoredStudentResultResponse)
+def generate_recommendation(
+    data: QuestionnaireSubmitRequest,
+    db: Session = Depends(get_db),
+):
+    return save_recommendation_result(db, data)
