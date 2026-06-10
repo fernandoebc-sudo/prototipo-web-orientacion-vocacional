@@ -3,7 +3,6 @@ import {
   BrainCircuit,
   CheckCircle2,
   ClipboardList,
-  Database,
   Download,
   GraduationCap,
   LineChart,
@@ -19,6 +18,21 @@ import {
   type AdminRecord,
   type AdminStatsResponse,
 } from '../services/api'
+
+const getPercentageWidthClass = (percentage: number) => {
+  if (percentage >= 100) return 'w-full'
+  if (percentage >= 90) return 'w-[90%]'
+  if (percentage >= 80) return 'w-[80%]'
+  if (percentage >= 70) return 'w-[70%]'
+  if (percentage >= 60) return 'w-[60%]'
+  if (percentage >= 50) return 'w-[50%]'
+  if (percentage >= 40) return 'w-[40%]'
+  if (percentage >= 30) return 'w-[30%]'
+  if (percentage >= 20) return 'w-[20%]'
+  if (percentage >= 10) return 'w-[10%]'
+
+  return 'w-[5%]'
+}
 
 function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStatsResponse | null>(null)
@@ -72,7 +86,6 @@ function AdminDashboardPage() {
   const totalRecords = stats?.total_records ?? 0
   const mostRecommendedArea = stats?.most_recommended_area ?? 'Sin registros'
   const averageAffinity = stats?.average_affinity ?? 0
-  const latestRecord = records[0]
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
@@ -230,8 +243,9 @@ function AdminDashboardPage() {
 
                       <div className="h-4 overflow-hidden rounded-full bg-slate-200">
                         <div
-                          className="h-full rounded-full bg-blue-600"
-                          style={{ width: `${item.percentage}%` }}
+                          className={`h-full rounded-full bg-blue-600 ${getPercentageWidthClass(
+                            item.percentage,
+                          )}`}
                         ></div>
                       </div>
                     </div>
