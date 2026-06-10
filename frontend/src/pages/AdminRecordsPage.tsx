@@ -8,53 +8,81 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminSidebar from '../components/AdminSidebar'
-
-const records = [
-  {
-    id: 'REG-001',
-    age: '17',
-    institution: 'Pública',
-    model1: 'Ingeniería y Tecnología',
-    model2: 'Ingeniería y Tecnología',
-    result: 'Ingeniería y Tecnología',
-    affinity: '84%',
-    match: true,
-  },
-  {
-    id: 'REG-002',
-    age: '16',
-    institution: 'Privada',
-    model1: 'Ciencias de la salud',
-    model2: 'Ciencias de la salud',
-    result: 'Ciencias de la salud',
-    affinity: '79%',
-    match: true,
-  },
-  {
-    id: 'REG-003',
-    age: '18+',
-    institution: 'Fiscomisional',
-    model1: 'Humanísticas y sociales',
-    model2: 'Artísticas',
-    result: 'Humanísticas y sociales',
-    affinity: '72%',
-    match: false,
-  },
-  {
-    id: 'REG-004',
-    age: '17',
-    institution: 'Pública',
-    model1: 'Ciencias exactas y agrarias',
-    model2: 'Ingeniería y Tecnología',
-    result: 'Ciencias exactas y agrarias',
-    affinity: '76%',
-    match: false,
-  },
-]
+import { getAdminRecords, type AdminRecord } from '../services/api'
 
 function AdminRecordsPage() {
+  const [records, setRecords] = useState<AdminRecord[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    async function loadRecords() {
+      try {
+        const response = await getAdminRecords()
+        setRecords(response.records)
+      } catch (error) {
+        setErrorMessage(
+          'No se pudieron cargar los registros. Verifica que el backend esté activo.',
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadRecords()
+  }, [])
+
+  const filteredRecords = useMemo(() => {
+    const normalizedSearch = searchTerm.toLowerCase().trim()
+
+    if (!normalizedSearch) {
+      return records
+    }
+
+    return records.filter((record) => {
+      return (
+        `REG-${record.id}`.toLowerCase().includes(normalizedSearch) ||
+        record.recommended_area.toLowerCase().includes(normalizedSearch) ||
+        record.created_at.toLowerCase().includes(normalizedSearch)
+      )
+    })
+  }, [records, searchTerm])
+
+  const averageAffinity =
+    records.length > 0
+      ? Math.round(
+          records.reduce((total, record) => total + record.affinity, 0) /
+            records.length,
+        )
+      : 0
+
+  const latestRecord = records[0]
+
+  const exportRecords = () => {
+    const csvHeader = 'id,area_recomendada,afinidad,fecha\n'
+    const csvRows = records
+      .map(
+        (record) =>
+          `${record.id},"${record.recommended_area}",${record.affinity},"${record.created_at}"`,
+      )
+      .join('\n')
+
+    const csvContent = `${csvHeader}${csvRows}`
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = 'registros-vocai.csv'
+    link.click()
+
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <AdminSidebar />
@@ -73,8 +101,8 @@ function AdminRecordsPage() {
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Consulta referencial de cuestionarios procesados, resultados
-                generales y coincidencias entre modelos.
+                Consulta de resultados almacenados en PostgreSQL a partir de los
+                cuestionarios procesados por el backend.
               </p>
             </div>
 
@@ -98,10 +126,10 @@ function AdminRecordsPage() {
                 Total de registros
               </p>
               <h3 className="mt-2 text-4xl font-extrabold text-slate-950">
-                4
+                {records.length}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                Datos referenciales de prueba
+                Resultados consultados desde la base de datos
               </p>
             </div>
 
@@ -111,13 +139,13 @@ function AdminRecordsPage() {
               </div>
 
               <p className="mt-5 text-sm font-semibold text-slate-500">
-                Coincidencias
+                Afinidad promedio
               </p>
               <h3 className="mt-2 text-4xl font-extrabold text-emerald-600">
-                2
+                {averageAffinity}%
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                Resultados iguales entre modelos
+                Promedio calculado con los registros actuales
               </p>
             </div>
 
@@ -127,13 +155,13 @@ function AdminRecordsPage() {
               </div>
 
               <p className="mt-5 text-sm font-semibold text-slate-500">
-                Diferencias
+                Último registro
               </p>
               <h3 className="mt-2 text-4xl font-extrabold text-amber-600">
-                2
+                {latestRecord ? `#${latestRecord.id}` : '—'}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                Resultados distintos entre modelos
+                Registro más reciente procesado
               </p>
             </div>
           </div>
@@ -145,21 +173,28 @@ function AdminRecordsPage() {
                   Registros procesados
                 </p>
                 <h3 className="mt-2 text-2xl font-extrabold text-slate-950">
-                  Resultados por estudiante
+                  Resultados almacenados
                 </h3>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  La tabla muestra información no identificable, recomendaciones
-                  generadas por cada modelo y resultado general.
+                  La tabla muestra información no identificable generada por el
+                  prototipo y almacenada en PostgreSQL.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
                   <Filter size={18} />
                   Filtrar
                 </button>
 
-                <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700">
+                <button
+                  type="button"
+                  onClick={exportRecords}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
+                >
                   <Download size={18} />
                   Exportar
                 </button>
@@ -170,76 +205,83 @@ function AdminRecordsPage() {
               <Search className="text-slate-400" size={20} />
               <input
                 type="text"
-                placeholder="Buscar registro, institución o área recomendada"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Buscar registro, fecha o área recomendada"
                 className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
               />
             </div>
 
-            <div className="mt-6 overflow-x-auto rounded-3xl border border-slate-200">
-              <table className="w-full min-w-[920px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="px-4 py-4 font-bold">Registro</th>
-                    <th className="px-4 py-4 font-bold">Edad</th>
-                    <th className="px-4 py-4 font-bold">Institución</th>
-                    <th className="px-4 py-4 font-bold">Modelo 1</th>
-                    <th className="px-4 py-4 font-bold">Modelo 2</th>
-                    <th className="px-4 py-4 font-bold">Resultado general</th>
-                    <th className="px-4 py-4 font-bold">Afinidad</th>
-                    <th className="px-4 py-4 font-bold">Estado</th>
-                  </tr>
-                </thead>
+            {isLoading && (
+              <div className="mt-6 rounded-3xl border border-blue-100 bg-blue-50 p-5">
+                <p className="text-sm font-semibold text-blue-700">
+                  Cargando registros desde el backend...
+                </p>
+              </div>
+            )}
 
-                <tbody className="divide-y divide-slate-200">
-                  {records.map((record) => (
-                    <tr key={record.id} className="bg-white hover:bg-slate-50">
-                      <td className="px-4 py-4 font-extrabold text-slate-950">
-                        {record.id}
-                      </td>
-                      <td className="px-4 py-4 text-slate-600">
-                        {record.age}
-                      </td>
-                      <td className="px-4 py-4 text-slate-600">
-                        {record.institution}
-                      </td>
-                      <td className="px-4 py-4 text-slate-700">
-                        {record.model1}
-                      </td>
-                      <td className="px-4 py-4 text-slate-700">
-                        {record.model2}
-                      </td>
-                      <td className="px-4 py-4 font-bold text-slate-950">
-                        {record.result}
-                      </td>
-                      <td className="px-4 py-4 font-extrabold text-blue-700">
-                        {record.affinity}
-                      </td>
-                      <td className="px-4 py-4">
-                        {record.match ? (
+            {errorMessage && (
+              <div className="mt-6 rounded-3xl border border-red-100 bg-red-50 p-5">
+                <p className="text-sm font-semibold text-red-700">
+                  {errorMessage}
+                </p>
+              </div>
+            )}
+
+            {!isLoading && !errorMessage && (
+              <div className="mt-6 overflow-x-auto rounded-3xl border border-slate-200">
+                <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th className="px-4 py-4 font-bold">Registro</th>
+                      <th className="px-4 py-4 font-bold">Área recomendada</th>
+                      <th className="px-4 py-4 font-bold">Afinidad</th>
+                      <th className="px-4 py-4 font-bold">Fecha de registro</th>
+                      <th className="px-4 py-4 font-bold">Estado</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-slate-200">
+                    {filteredRecords.map((record) => (
+                      <tr key={record.id} className="bg-white hover:bg-slate-50">
+                        <td className="px-4 py-4 font-extrabold text-slate-950">
+                          REG-{record.id.toString().padStart(3, '0')}
+                        </td>
+                        <td className="px-4 py-4 font-bold text-slate-950">
+                          {record.recommended_area}
+                        </td>
+                        <td className="px-4 py-4 font-extrabold text-blue-700">
+                          {record.affinity}%
+                        </td>
+                        <td className="px-4 py-4 text-slate-600">
+                          {record.created_at}
+                        </td>
+                        <td className="px-4 py-4">
                           <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
                             <CheckCircle2 size={14} />
-                            Coinciden
+                            Almacenado
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                            <AlertTriangle size={14} />
-                            Diferente
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {filteredRecords.length === 0 && (
+                  <div className="bg-white px-4 py-8 text-center text-sm font-semibold text-slate-500">
+                    No se encontraron registros con ese criterio de búsqueda.
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mt-6 rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
               <div className="flex items-start gap-3">
                 <Users className="mt-1 text-emerald-600" size={22} />
                 <p className="text-sm leading-6 text-emerald-800">
-                  Los registros mostrados son referenciales. En una etapa
-                  posterior, esta vista consultará información almacenada en la
-                  base de datos del prototipo.
+                  Los registros mostrados provienen de la base de datos del
+                  prototipo y no incluyen nombres, cédulas, correos ni otros
+                  datos directamente identificables.
                 </p>
               </div>
             </div>
