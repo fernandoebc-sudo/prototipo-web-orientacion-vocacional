@@ -12,6 +12,7 @@ import {
   Target,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import type { StudentResult } from '../services/api'
 
 const secondaryAreas = [
   {
@@ -34,7 +35,59 @@ const secondaryAreas = [
   },
 ]
 
+function getStoredResult(): StudentResult | null {
+  const storedResult = sessionStorage.getItem('vocai_result')
+
+  if (!storedResult) {
+    return null
+  }
+
+  try {
+    return JSON.parse(storedResult) as StudentResult
+  } catch (error) {
+    return null
+  }
+}
+
 function ResultPage() {
+  const result = getStoredResult()
+
+  if (!result) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-6 text-slate-900">
+        <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-blue-100 blur-3xl"></div>
+        <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-emerald-100 blur-3xl"></div>
+
+        <div className="relative z-10 max-w-xl rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-2xl shadow-slate-200">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <BrainCircuit size={32} />
+          </div>
+
+          <h1 className="mt-6 text-2xl font-extrabold text-slate-950">
+            No hay un resultado disponible
+          </h1>
+
+          <p className="mt-3 leading-7 text-slate-600">
+            Para visualizar una recomendación, primero debes completar el
+            cuestionario académico-vocacional.
+          </p>
+
+          <Link
+            to="/cuestionario"
+            className="mt-6 inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
+          >
+            <RefreshCw size={21} />
+            Ir al cuestionario
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
+  const affinityText = `${result.affinity}%`
+  const model1AffinityText = `${result.model_1.affinity}%`
+  const model2AffinityText = `${result.model_2.affinity}%`
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
       <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-blue-100 blur-3xl"></div>
@@ -72,7 +125,7 @@ function ResultPage() {
           <div className="rounded-[2rem] border border-slate-200 bg-white p-7 shadow-2xl shadow-slate-200">
             <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
               <CheckCircle2 size={16} />
-              Resultado referencial generado
+              Resultado generado y almacenado
             </span>
 
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[1fr_0.35fr] md:items-center">
@@ -82,19 +135,21 @@ function ResultPage() {
                 </p>
 
                 <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-950">
-                  Ingeniería y Tecnología
+                  {result.recommended_area}
                 </h2>
 
                 <p className="mt-4 max-w-2xl leading-7 text-slate-600">
-                  Tus respuestas muestran afinidad con actividades relacionadas
-                  con tecnología, solución de problemas, análisis lógico y diseño
-                  de soluciones.
+                  Tus respuestas fueron procesadas por el backend del prototipo
+                  y registradas en la base de datos. El resultado mostrado
+                  corresponde a una recomendación académica por área.
                 </p>
               </div>
 
               <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-full border-[12px] border-emerald-500 bg-white shadow-xl shadow-emerald-100">
                 <div className="text-center">
-                  <p className="text-4xl font-extrabold text-slate-950">84%</p>
+                  <p className="text-4xl font-extrabold text-slate-950">
+                    {affinityText}
+                  </p>
                   <p className="mt-1 text-sm font-semibold text-slate-500">
                     Afinidad
                   </p>
@@ -122,20 +177,23 @@ function ResultPage() {
                 </div>
 
                 <span className="rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
-                  84%
+                  {model1AffinityText}
                 </span>
               </div>
 
               <h3 className="mt-5 text-xl font-extrabold text-slate-950">
-                Modelo 1
+                {result.model_1.name}
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Recomendación principal: Ingeniería y Tecnología.
+                Recomendación principal: {result.model_1.area}.
               </p>
 
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-blue-100">
-                <div className="h-full w-[84%] rounded-full bg-blue-600"></div>
+                <div
+                  className="h-full rounded-full bg-blue-600"
+                  style={{ width: model1AffinityText }}
+                ></div>
               </div>
             </div>
 
@@ -146,20 +204,23 @@ function ResultPage() {
                 </div>
 
                 <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
-                  79%
+                  {model2AffinityText}
                 </span>
               </div>
 
               <h3 className="mt-5 text-xl font-extrabold text-slate-950">
-                Modelo 2
+                {result.model_2.name}
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Recomendación principal: Ingeniería y Tecnología.
+                Recomendación principal: {result.model_2.area}.
               </p>
 
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-emerald-100">
-                <div className="h-full w-[79%] rounded-full bg-emerald-500"></div>
+                <div
+                  className="h-full rounded-full bg-emerald-500"
+                  style={{ width: model2AffinityText }}
+                ></div>
               </div>
             </div>
           </div>
@@ -175,6 +236,7 @@ function ResultPage() {
 
             <button
               type="button"
+              onClick={() => window.print()}
               className="inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
             >
               <Download size={21} />
@@ -257,9 +319,13 @@ function ResultPage() {
             <div className="flex items-start gap-3">
               <Sparkles className="mt-1 shrink-0 text-blue-600" size={22} />
               <p className="text-sm leading-6 text-slate-700">
-                Los valores mostrados son referenciales para la versión inicial
-                del prototipo y serán reemplazados por resultados generados a
-                partir de los modelos integrados.
+                Registro de resultado:{' '}
+                <span className="font-bold">
+                  #{result.recommendation_result_id}
+                </span>
+                . Los valores mostrados aún son referenciales para la versión
+                inicial del prototipo y serán reemplazados por resultados
+                generados a partir de los modelos integrados.
               </p>
             </div>
           </div>

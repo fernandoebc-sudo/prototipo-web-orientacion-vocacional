@@ -9,7 +9,8 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { generateRecommendation } from '../services/api'
 
 const steps = [
   {
@@ -94,6 +95,11 @@ type MultiSelectField =
 
 function QuestionnairePage() {
   const [currentStep, setCurrentStep] = useState(0)
+  const navigate = useNavigate()
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
   const [answers, setAnswers] = useState({
     consent: '',
     gender: '',
@@ -108,18 +114,25 @@ function QuestionnairePage() {
   const progressPercentage = Math.round(((currentStep + 1) / steps.length) * 100)
 
   const goNext = () => {
+    setSubmitError('')
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     }
   }
 
   const goBack = () => {
+    setSubmitError('')
+
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
     }
   }
 
-  const selectSingleAnswer = (field: 'consent' | 'gender' | 'orientation', value: string) => {
+  const selectSingleAnswer = (
+    field: 'consent' | 'gender' | 'orientation',
+    value: string,
+  ) => {
     setAnswers((previousAnswers) => ({
       ...previousAnswers,
       [field]: value,
@@ -161,6 +174,69 @@ function QuestionnairePage() {
         ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
         : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-200 hover:bg-emerald-50'
     }`
+
+  const validateAnswers = () => {
+    if (answers.consent !== 'Sí, acepto participar') {
+      return 'Para generar el resultado, debes aceptar participar voluntariamente.'
+    }
+
+    if (!answers.gender || !answers.orientation) {
+      return 'Completa los datos generales antes de generar el resultado.'
+    }
+
+    if (answers.academicPerformance.length === 0 || answers.interests.length === 0) {
+      return 'Selecciona al menos una opción en desempeño e intereses.'
+    }
+
+    if (answers.skills.length === 0 || answers.preferredActivities.length === 0) {
+      return 'Selecciona al menos una opción en habilidades y actividades preferidas.'
+    }
+
+    return ''
+  }
+
+  const handleSubmit = async () => {
+    const validationMessage = validateAnswers()
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      return
+    }
+
+    setSubmitError('')
+    setIsSubmitting(true)
+
+    const payload = {
+      general_data: {
+        consent: answers.consent,
+        gender: answers.gender,
+        orientation: answers.orientation,
+      },
+      academic_performance: {
+        selected_options: answers.academicPerformance,
+      },
+      interests_skills: {
+        interests: answers.interests,
+        skills: answers.skills,
+        preferred_activities: answers.preferredActivities,
+      },
+      vocational_security: {
+        questionnaire_version: 'compacta',
+      },
+    }
+
+    try {
+      const result = await generateRecommendation(payload)
+      sessionStorage.setItem('vocai_result', JSON.stringify(result))
+      navigate('/resultado')
+    } catch (error) {
+      setSubmitError(
+        'No se pudo generar el resultado. Verifica que el backend esté activo.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
@@ -236,7 +312,10 @@ function QuestionnairePage() {
                   <button
                     key={step.title}
                     type="button"
-                    onClick={() => setCurrentStep(index)}
+                    onClick={() => {
+                      setSubmitError('')
+                      setCurrentStep(index)
+                    }}
                     className={`flex w-full items-start gap-3 rounded-2xl border px-4 py-4 text-left transition ${
                       isActive
                         ? 'border-blue-200 bg-blue-50'
@@ -504,32 +583,43 @@ function QuestionnairePage() {
             )}
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
-            <button
-              type="button"
-              onClick={goBack}
-              disabled={currentStep === 0}
-              className="rounded-2xl border border-slate-200 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Anterior
-            </button>
+          <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6">
+            {submitError && (
+              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+                {submitError}
+              </p>
+            )}
 
-            {currentStep < steps.length - 1 ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
               <button
                 type="button"
-                onClick={goNext}
-                className="rounded-2xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
+                onClick={goBack}
+                disabled={currentStep === 0 || isSubmitting}
+                className="rounded-2xl border border-slate-200 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Siguiente sección
+                Anterior
               </button>
-            ) : (
-              <Link
-                to="/resultado"
-                className="rounded-2xl bg-emerald-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700"
-              >
-                Ver resultado
-              </Link>
-            )}
+
+              {currentStep < steps.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={goNext}
+                  disabled={isSubmitting}
+                  className="rounded-2xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Siguiente sección
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="rounded-2xl bg-emerald-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Generando resultado...' : 'Ver resultado'}
+                </button>
+              )}
+            </div>
           </div>
         </section>
       </section>
