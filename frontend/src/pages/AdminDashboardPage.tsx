@@ -10,37 +10,70 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminSidebar from '../components/AdminSidebar'
-
-const areaStats = [
-  {
-    area: 'Ingeniería y Tecnología',
-    value: '35%',
-    width: 'w-[35%]',
-    color: 'bg-blue-600',
-  },
-  {
-    area: 'Ciencias de la salud',
-    value: '22%',
-    width: 'w-[22%]',
-    color: 'bg-emerald-500',
-  },
-  {
-    area: 'Humanísticas y sociales',
-    value: '18%',
-    width: 'w-[18%]',
-    color: 'bg-slate-500',
-  },
-  {
-    area: 'Administrativas y contables',
-    value: '12%',
-    width: 'w-[12%]',
-    color: 'bg-blue-400',
-  },
-]
+import {
+  getAdminRecords,
+  getAdminStats,
+  type AdminRecord,
+  type AdminStatsResponse,
+} from '../services/api'
 
 function AdminDashboardPage() {
+  const [stats, setStats] = useState<AdminStatsResponse | null>(null)
+  const [records, setRecords] = useState<AdminRecord[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const [statsResponse, recordsResponse] = await Promise.all([
+          getAdminStats(),
+          getAdminRecords(),
+        ])
+
+        setStats(statsResponse)
+        setRecords(recordsResponse.records)
+      } catch (error) {
+        setErrorMessage(
+          'No se pudo cargar la información del panel. Verifica que el backend esté activo.',
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadDashboardData()
+  }, [])
+
+  const areaStats = useMemo(() => {
+    if (records.length === 0) {
+      return []
+    }
+
+    const groupedAreas = records.reduce<Record<string, number>>((accumulator, record) => {
+      accumulator[record.recommended_area] =
+        (accumulator[record.recommended_area] || 0) + 1
+
+      return accumulator
+    }, {})
+
+    return Object.entries(groupedAreas)
+      .map(([area, total]) => ({
+        area,
+        total,
+        percentage: Math.round((total / records.length) * 100),
+      }))
+      .sort((firstArea, secondArea) => secondArea.total - firstArea.total)
+  }, [records])
+
+  const totalRecords = stats?.total_records ?? 0
+  const mostRecommendedArea = stats?.most_recommended_area ?? 'Sin registros'
+  const averageAffinity = stats?.average_affinity ?? 0
+  const latestRecord = records[0]
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <AdminSidebar />
@@ -72,7 +105,9 @@ function AdminDashboardPage() {
                     Estado del prototipo
                   </p>
                   <p className="text-sm text-emerald-700">
-                    Interfaz visual en desarrollo
+                    {isLoading
+                      ? 'Cargando información'
+                      : 'Conectado al backend'}
                   </p>
                 </div>
               </div>
@@ -81,6 +116,14 @@ function AdminDashboardPage() {
         </header>
 
         <div className="mx-auto max-w-7xl px-6 py-8">
+          {errorMessage && (
+            <div className="mb-6 rounded-3xl border border-red-100 bg-red-50 p-5">
+              <p className="text-sm font-semibold text-red-700">
+                {errorMessage}
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
@@ -91,10 +134,10 @@ function AdminDashboardPage() {
                 Cuestionarios procesados
               </p>
               <h3 className="mt-2 text-4xl font-extrabold text-slate-950">
-                120
+                {isLoading ? '...' : totalRecords}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                Valor referencial para la interfaz
+                Total consultado desde PostgreSQL
               </p>
             </div>
 
@@ -107,10 +150,10 @@ function AdminDashboardPage() {
                 Área más recomendada
               </p>
               <h3 className="mt-2 text-2xl font-extrabold text-slate-950">
-                Ingeniería y Tecnología
+                {isLoading ? 'Cargando...' : mostRecommendedArea}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                Resultado agregado de ejemplo
+                Resultado agregado desde la base de datos
               </p>
             </div>
 
@@ -120,13 +163,13 @@ function AdminDashboardPage() {
               </div>
 
               <p className="mt-5 text-sm font-semibold text-slate-500">
-                Coincidencia entre modelos
+                Afinidad promedio
               </p>
               <h3 className="mt-2 text-4xl font-extrabold text-blue-600">
-                82%
+                {isLoading ? '...' : `${averageAffinity}%`}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                Comparación referencial
+                Promedio calculado con registros reales
               </p>
             </div>
 
@@ -152,14 +195,14 @@ function AdminDashboardPage() {
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-blue-600">
-                    Distribución referencial
+                    Distribución por áreas
                   </p>
                   <h3 className="mt-2 text-2xl font-extrabold text-slate-950">
                     Áreas recomendadas
                   </h3>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                     Representación agregada de las áreas académicas con mayor
-                    presencia en los resultados del prototipo.
+                    presencia en los resultados almacenados.
                   </p>
                 </div>
 
@@ -173,24 +216,35 @@ function AdminDashboardPage() {
               </div>
 
               <div className="mt-7 space-y-5">
-                {areaStats.map((item) => (
-                  <div key={item.area}>
-                    <div className="mb-2 flex justify-between text-sm">
-                      <span className="font-semibold text-slate-700">
-                        {item.area}
-                      </span>
-                      <span className="font-bold text-slate-950">
-                        {item.value}
-                      </span>
-                    </div>
+                {areaStats.length > 0 ? (
+                  areaStats.map((item) => (
+                    <div key={item.area}>
+                      <div className="mb-2 flex justify-between text-sm">
+                        <span className="font-semibold text-slate-700">
+                          {item.area}
+                        </span>
+                        <span className="font-bold text-slate-950">
+                          {item.percentage}% · {item.total} registros
+                        </span>
+                      </div>
 
-                    <div className="h-4 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className={`h-full rounded-full ${item.color} ${item.width}`}
-                      ></div>
+                      <div className="h-4 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="h-full rounded-full bg-blue-600"
+                          style={{ width: `${item.percentage}%` }}
+                        ></div>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                    <p className="text-sm font-semibold text-slate-600">
+                      {isLoading
+                        ? 'Cargando distribución de áreas...'
+                        : 'Todavía no existen registros para mostrar distribución por áreas.'}
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </section>
 
@@ -217,7 +271,7 @@ function AdminDashboardPage() {
                       <div>
                         <p className="font-bold text-slate-950">Modelo 1</p>
                         <p className="mt-1 text-sm text-slate-600">
-                          Recomendaciones coincidentes
+                          Resultado referencial
                         </p>
                       </div>
                       <span className="text-2xl font-extrabold text-blue-700">
@@ -231,7 +285,7 @@ function AdminDashboardPage() {
                       <div>
                         <p className="font-bold text-slate-950">Modelo 2</p>
                         <p className="mt-1 text-sm text-slate-600">
-                          Recomendaciones coincidentes
+                          Resultado referencial
                         </p>
                       </div>
                       <span className="text-2xl font-extrabold text-emerald-700">
@@ -258,9 +312,9 @@ function AdminDashboardPage() {
                       Uso administrativo
                     </h3>
                     <p className="mt-3 text-sm leading-6 text-emerald-800">
-                      La información mostrada permite validar la estructura
-                      visual antes de conectar el backend, la base de datos y
-                      los modelos entrenados.
+                      La información mostrada permite revisar registros y
+                      estadísticas generales del prototipo sin utilizar datos
+                      directamente identificables de los estudiantes.
                     </p>
                   </div>
                 </div>
