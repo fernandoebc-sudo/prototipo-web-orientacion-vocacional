@@ -1,5 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from app.db.database import get_db
 from app.schemas.admin import (
     AdminRecordsResponse,
     AdminStatsResponse,
@@ -7,23 +9,23 @@ from app.schemas.admin import (
     ModelAnalyticsResponse,
 )
 from app.services.admin_service import (
+    get_database_records,
+    get_database_stats,
     get_reference_export,
     get_reference_model_analytics,
-    get_reference_records,
-    get_reference_stats,
 )
 
 router = APIRouter(prefix="/admin", tags=["Administración"])
 
 
 @router.get("/records", response_model=AdminRecordsResponse)
-def get_records():
-    return get_reference_records()
+def get_records(db: Session = Depends(get_db)):
+    return get_database_records(db)
 
 
 @router.get("/stats", response_model=AdminStatsResponse)
-def get_stats():
-    return get_reference_stats()
+def get_stats(db: Session = Depends(get_db)):
+    return get_database_stats(db)
 
 
 @router.get("/model-analytics", response_model=ModelAnalyticsResponse)

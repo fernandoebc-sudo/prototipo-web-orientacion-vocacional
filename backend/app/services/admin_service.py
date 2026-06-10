@@ -1,30 +1,60 @@
-def get_reference_records():
+from sqlalchemy import desc, func, select
+from sqlalchemy.orm import Session
+
+from app.models.recommendation_result import RecommendationResult
+
+
+def get_database_records(db: Session):
+    results = db.scalars(
+        select(RecommendationResult)
+        .order_by(RecommendationResult.created_at.desc())
+    ).all()
+
     return {
         "status": "ok",
-        "message": "Registros referenciales de cuestionarios procesados",
+        "message": "Registros obtenidos desde la base de datos",
         "records": [
             {
-                "id": 1,
-                "recommended_area": "Ingeniería y Tecnología",
-                "affinity": 84,
-                "created_at": "2026-06-07"
-            },
-            {
-                "id": 2,
-                "recommended_area": "Ciencias de la Salud",
-                "affinity": 78,
-                "created_at": "2026-06-07"
+                "id": result.id,
+                "recommended_area": result.recommended_area,
+                "affinity": result.affinity,
+                "created_at": result.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             }
+            for result in results
         ]
     }
 
 
-def get_reference_stats():
+def get_database_stats(db: Session):
+    total_records = db.scalar(
+        select(func.count(RecommendationResult.id))
+    ) or 0
+
+    average_affinity = db.scalar(
+        select(func.avg(RecommendationResult.affinity))
+    ) or 0
+
+    most_recommended_area_row = db.execute(
+        select(
+            RecommendationResult.recommended_area,
+            func.count(RecommendationResult.id).label("total")
+        )
+        .group_by(RecommendationResult.recommended_area)
+        .order_by(desc("total"))
+        .limit(1)
+    ).first()
+
+    most_recommended_area = (
+        most_recommended_area_row[0]
+        if most_recommended_area_row
+        else "Sin registros"
+    )
+
     return {
         "status": "ok",
-        "total_records": 120,
-        "most_recommended_area": "Ingeniería y Tecnología",
-        "average_affinity": 82
+        "total_records": total_records,
+        "most_recommended_area": most_recommended_area,
+        "average_affinity": round(float(average_affinity)),
     }
 
 
