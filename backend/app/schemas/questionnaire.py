@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import Any, Dict, List
 
 
 class QuestionnaireSection(BaseModel):
@@ -14,10 +14,10 @@ class QuestionnaireResponse(BaseModel):
 
 
 class QuestionnaireSubmitRequest(BaseModel):
-    general_data: Dict[str, str]
-    academic_performance: Dict[str, int]
-    interests_skills: Dict[str, int]
-    vocational_security: Dict[str, str]
+    general_data: Dict[str, Any]
+    academic_performance: Dict[str, Any]
+    interests_skills: Dict[str, Any]
+    vocational_security: Dict[str, Any]
 
 
 class QuestionnaireSubmitResponse(BaseModel):
