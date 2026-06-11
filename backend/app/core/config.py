@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     app_env: str = "development"
     database_url: str
 
+    secret_key: str = "vocai_secret_key_development_2026"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 120
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
