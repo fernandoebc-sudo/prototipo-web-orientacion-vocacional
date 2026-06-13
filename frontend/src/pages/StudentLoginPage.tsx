@@ -1,16 +1,54 @@
+import { useState } from 'react'
 import {
+  AlertCircle,
   ArrowLeft,
   BookOpenCheck,
   BrainCircuit,
   GraduationCap,
-  LockKeyhole,
-  Mail,
+  KeyRound,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { loginStudent } from '../services/api'
 
 function StudentLoginPage() {
+  const navigate = useNavigate()
+
+  const [accessCode, setAccessCode] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setErrorMessage('')
+
+    const formattedCode = accessCode.trim().toUpperCase()
+
+    if (!formattedCode) {
+      setErrorMessage('Ingresa el código de acceso para continuar.')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      const response = await loginStudent(formattedCode)
+
+      sessionStorage.setItem('vocai_student_token', response.access_token)
+      sessionStorage.setItem('vocai_student_role', response.role)
+      sessionStorage.setItem('vocai_student_code', formattedCode)
+
+      navigate('/cuestionario')
+    } catch {
+      setErrorMessage(
+        'El código ingresado no es válido o ya fue utilizado.',
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
       <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-100 blur-3xl"></div>
@@ -51,60 +89,52 @@ function StudentLoginPage() {
           </span>
 
           <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-slate-950">
-            Inicia sesión para responder el cuestionario
+            Ingresa tu código para responder el cuestionario
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Accede al formulario académico-vocacional y completa las secciones
-            necesarias para obtener una recomendación por áreas.
+            El acceso se realiza mediante un código generado por el
+            administrador. No se solicita nombre, correo ni datos directamente
+            identificables del estudiante.
           </p>
 
-          <form className="mt-8 space-y-5">
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div>
               <label
-                htmlFor="student-email"
+                htmlFor="student-code"
                 className="text-sm font-semibold text-slate-700"
               >
-                Usuario o correo
+                Código de acceso
               </label>
 
               <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-400 focus-within:bg-white">
-                <Mail className="text-slate-400" size={20} />
+                <KeyRound className="text-slate-400" size={20} />
                 <input
-                  id="student-email"
+                  id="student-code"
                   type="text"
-                  placeholder="estudiante@correo.com"
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                  value={accessCode}
+                  onChange={(event) => setAccessCode(event.target.value)}
+                  placeholder="VOC-WW2E-TMUC"
+                  className="w-full bg-transparent text-sm uppercase tracking-wide outline-none placeholder:text-slate-400"
                 />
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="student-password"
-                className="text-sm font-semibold text-slate-700"
-              >
-                Contraseña
-              </label>
-
-              <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-400 focus-within:bg-white">
-                <LockKeyhole className="text-slate-400" size={20} />
-                <input
-                  id="student-password"
-                  type="password"
-                  placeholder="Ingresa tu contraseña"
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-                />
+            {errorMessage && (
+              <div className="flex items-start gap-2 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 shrink-0" size={18} />
+                <p>{errorMessage}</p>
               </div>
-            </div>
+            )}
 
-            <Link
-              to="/cuestionario"
-              className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
               <BookOpenCheck size={22} />
-              Ingresar al cuestionario
-            </Link>
+              {isLoading ? 'Validando código...' : 'Ingresar al cuestionario'}
+            </button>
           </form>
 
           <p className="mt-5 text-sm leading-6 text-slate-500">
@@ -136,22 +166,22 @@ function StudentLoginPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-bold text-blue-700">Paso 1</p>
               <h4 className="mt-1 font-bold text-slate-950">
-                Responder el cuestionario
+                Ingresar con código
               </h4>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Se recopilan datos generales, desempeño académico, intereses,
-                habilidades y seguridad vocacional.
+                El estudiante utiliza un código anónimo entregado previamente
+                por la institución o el administrador.
               </p>
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-bold text-emerald-700">Paso 2</p>
               <h4 className="mt-1 font-bold text-slate-950">
-                Procesar el perfil
+                Responder el cuestionario
               </h4>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Las respuestas se organizan para generar una recomendación
-                académica por áreas.
+                Se recopilan datos generales, desempeño académico, intereses,
+                habilidades y seguridad vocacional.
               </p>
             </div>
 

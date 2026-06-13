@@ -42,7 +42,24 @@ export type AdminStatsResponse = {
   average_affinity: number
 }
 
+export type LoginResponse = {
+  status: string
+  access_token: string
+  token_type: string
+  role: 'admin' | 'student'
+  message: string
+}
+
 const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
+
+function getAdminAuthHeaders() {
+  const token = localStorage.getItem('vocai_admin_token')
+
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  }
+}
 
 export async function generateRecommendation(
   payload: QuestionnairePayload,
@@ -63,7 +80,9 @@ export async function generateRecommendation(
 }
 
 export async function getAdminRecords(): Promise<AdminRecordsResponse> {
-  const response = await fetch(`${API_BASE_URL}/admin/records`)
+  const response = await fetch(`${API_BASE_URL}/admin/records`, {
+    headers: getAdminAuthHeaders(),
+  })
 
   if (!response.ok) {
     throw new Error('No se pudieron obtener los registros')
@@ -73,10 +92,47 @@ export async function getAdminRecords(): Promise<AdminRecordsResponse> {
 }
 
 export async function getAdminStats(): Promise<AdminStatsResponse> {
-  const response = await fetch(`${API_BASE_URL}/admin/stats`)
+  const response = await fetch(`${API_BASE_URL}/admin/stats`, {
+    headers: getAdminAuthHeaders(),
+  })
 
   if (!response.ok) {
     throw new Error('No se pudieron obtener las estadísticas')
+  }
+
+  return response.json()
+}
+
+export async function loginAdmin(
+  username: string,
+  password: string,
+): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/admin-login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Credenciales administrativas incorrectas')
+  }
+
+  return response.json()
+}
+
+export async function loginStudent(code: string): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/student-login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ code }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Código de acceso inválido o no disponible')
   }
 
   return response.json()
