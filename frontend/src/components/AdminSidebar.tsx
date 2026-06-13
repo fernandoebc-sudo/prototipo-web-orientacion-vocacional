@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Database,
   Download,
+  KeyRound,
   LayoutDashboard,
   LogOut,
 } from 'lucide-react'
@@ -29,6 +30,11 @@ const adminMenuItems = [
     label: 'Analítica de modelos',
     path: '/admin/analitica-modelos',
     icon: BrainCircuit,
+  },
+  {
+  label: 'Códigos de acceso',
+  path: '/admin/codigos-acceso',
+  icon: KeyRound,
   },
   {
     label: 'Exportación',

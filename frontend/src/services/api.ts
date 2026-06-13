@@ -137,3 +137,43 @@ export async function loginStudent(code: string): Promise<LoginResponse> {
 
   return response.json()
 }
+
+export type StudentAccessCodeItem = {
+  id: number
+  code: string
+  is_active: boolean
+  is_used: boolean
+  created_at: string
+  used_at: string | null
+}
+
+export type StudentAccessCodesResponse = {
+  status: string
+  message: string
+  codes: StudentAccessCodeItem[]
+}
+
+export async function getStudentAccessCodes(): Promise<StudentAccessCodesResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/student-codes`, {
+    headers: getAdminAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error('No se pudieron obtener los códigos de acceso')
+  }
+
+  return response.json()
+}
+
+export async function createStudentAccessCode(): Promise<StudentAccessCodesResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/student-codes`, {
+    method: 'POST',
+    headers: getAdminAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error('No se pudo generar el código de acceso')
+  }
+
+  return response.json()
+}
