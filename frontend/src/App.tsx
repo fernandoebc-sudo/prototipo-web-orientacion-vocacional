@@ -10,6 +10,7 @@ import AdminStatsPage from './pages/AdminStatsPage'
 import AdminModelAnalyticsPage from './pages/AdminModelAnalyticsPage'
 import AdminAccessCodesPage from './pages/AdminAccessCodesPage'
 import AdminExportPage from './pages/AdminExportPage'
+import ProtectedAdminRoute from './components/ProtectedAdminRoute'
 
 function App() {
   return (
@@ -20,12 +21,59 @@ function App() {
         <Route path="/login-admin" element={<AdminLoginPage />} />
         <Route path="/cuestionario" element={<QuestionnairePage />} />
         <Route path="/resultado" element={<ResultPage />} />
-        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-        <Route path="/admin/registros" element={<AdminRecordsPage />} />
-        <Route path="/admin/estadisticas" element={<AdminStatsPage />} />
-        <Route path="/admin/analitica-modelos" element={<AdminModelAnalyticsPage />} />
-        <Route path="/admin/codigos-acceso" element={<AdminAccessCodesPage />} />
-        <Route path="/admin/exportacion" element={<AdminExportPage />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedAdminRoute>
+              <AdminDashboardPage />
+            </ProtectedAdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/registros"
+          element={
+            <ProtectedAdminRoute>
+              <AdminRecordsPage />
+            </ProtectedAdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/estadisticas"
+          element={
+            <ProtectedAdminRoute>
+              <AdminStatsPage />
+            </ProtectedAdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/analitica-modelos"
+          element={
+            <ProtectedAdminRoute>
+              <AdminModelAnalyticsPage />
+            </ProtectedAdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/codigos-acceso"
+          element={
+            <ProtectedAdminRoute>
+              <AdminAccessCodesPage />
+            </ProtectedAdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/exportacion"
+          element={
+            <ProtectedAdminRoute>
+              <AdminExportPage />
+            </ProtectedAdminRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )

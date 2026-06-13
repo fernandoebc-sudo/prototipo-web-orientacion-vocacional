@@ -8,7 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
 } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 const adminMenuItems = [
   {
@@ -45,7 +45,14 @@ const adminMenuItems = [
 
 function AdminSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
 
+  const handleLogout = () => {
+  localStorage.removeItem('vocai_admin_token')
+  localStorage.removeItem('vocai_admin_role')
+
+  navigate('/login-admin')
+}
   return (
     <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-white/10 bg-slate-950 px-5 py-6 text-white lg:block">
       <div className="flex items-center gap-3">
@@ -93,13 +100,14 @@ function AdminSidebar() {
       </nav>
 
       <div className="absolute bottom-6 left-5 right-5">
-        <Link
-          to="/"
-          className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/5"
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/5"
         >
           <LogOut size={18} />
           Cerrar sesión
-        </Link>
+        </button>
       </div>
     </aside>
   )
