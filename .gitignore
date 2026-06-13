@@ -18,3 +18,22 @@ build/
 # Configuración local
 .DS_Store
 Thumbs.db
+
+
+# Node / React
+node_modules/
+dist/
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
