@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   ArrowLeft,
   BookOpenCheck,
   BrainCircuit,
@@ -19,9 +20,14 @@ const steps = [
     icon: School,
   },
   {
-    title: 'Desempeño e intereses',
-    description: 'Áreas de mejor desempeño e intereses principales.',
+    title: 'Desempeño académico',
+    description: 'Materias o áreas donde el estudiante percibe mejor desempeño.',
     icon: BookOpenCheck,
+  },
+  {
+    title: 'Intereses vocacionales',
+    description: 'Actividades que generan mayor interés en el estudiante.',
+    icon: Sparkles,
   },
   {
     title: 'Habilidades y preferencias',
@@ -30,20 +36,16 @@ const steps = [
   },
 ]
 
-const progressWidths = ['w-1/3', 'w-2/3', 'w-full']
+const progressWidths = ['w-1/4', 'w-2/4', 'w-3/4', 'w-full']
 
 const genderOptions = [
-  'Masculino',
   'Femenino',
+  'Masculino',
   'Prefiero no decirlo',
   'Otro',
 ]
 
-const orientationOptions = [
-  'Sí',
-  'No',
-  'No estoy seguro/a',
-]
+const orientationOptions = ['Sí', 'No', 'Tal vez']
 
 const academicPerformanceOptions = [
   'Matemáticas y razonamiento lógico',
@@ -52,7 +54,7 @@ const academicPerformanceOptions = [
   'Ciencias sociales e historia',
   'Informática, tecnología o programación',
   'Arte, diseño o creatividad',
-  'Actividades prácticas, experimentos o trabajo fuera del aula',
+  'Actividades prácticas, experimentos o trabajos fuera del aula',
 ]
 
 const interestOptions = [
@@ -60,24 +62,25 @@ const interestOptions = [
   'Enseñar, orientar o comunicar ideas',
   'Crear diseños, contenidos o expresiones artísticas',
   'Cuidar la salud y bienestar de las personas',
+  'Diseñar, construir o mejorar soluciones prácticas',
   'Resolver problemas con tecnología o herramientas digitales',
   'Participar en seguridad, prevención o emergencias',
   'Investigar datos, naturaleza o fenómenos científicos',
 ]
 
 const skillOptions = [
-  'Organización y planificación',
-  'Comunicación',
-  'Creatividad',
-  'Empatía o apoyo a otras personas',
-  'Solución de problemas técnicos',
-  'Uso de herramientas digitales',
-  'Autocontrol y seguimiento de normas',
-  'Análisis de datos u observación',
+  'Organizar y planificar actividades',
+  'Comunicar ideas con claridad',
+  'Crear ideas, diseños o soluciones nuevas',
+  'Escuchar, ayudar o apoyar a otras personas',
+  'Resolver problemas técnicos',
+  'Usar herramientas digitales',
+  'Seguir normas e instrucciones con responsabilidad',
+  'Observar detalles y analizar información',
 ]
 
 const preferredActivityOptions = [
-  'Resolver ejercicios, problemas o retos',
+  'Resolver ejercicios, problemas, cálculos o retos',
   'Ayudar o acompañar a otras personas',
   'Crear dibujos, diseños, videos o ideas nuevas',
   'Buscar información, investigar o analizar temas',
@@ -94,11 +97,11 @@ type MultiSelectField =
   | 'preferredActivities'
 
 function QuestionnairePage() {
-  const [currentStep, setCurrentStep] = useState(0)
   const navigate = useNavigate()
 
+  const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const [answers, setAnswers] = useState({
     consent: '',
@@ -111,23 +114,9 @@ function QuestionnairePage() {
   })
 
   const CurrentIcon = steps[currentStep].icon
-  const progressPercentage = Math.round(((currentStep + 1) / steps.length) * 100)
-
-  const goNext = () => {
-    setSubmitError('')
-
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
-    }
-  }
-
-  const goBack = () => {
-    setSubmitError('')
-
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
+  const progressPercentage = Math.round(
+    ((currentStep + 1) / steps.length) * 100,
+  )
 
   const selectSingleAnswer = (
     field: 'consent' | 'gender' | 'orientation',
@@ -175,42 +164,67 @@ function QuestionnairePage() {
         : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-200 hover:bg-emerald-50'
     }`
 
-  const validateAnswers = () => {
-    if (answers.consent !== 'Sí, acepto participar') {
-      return 'Para generar el resultado, debes aceptar participar voluntariamente.'
+  const isCurrentStepValid = () => {
+    if (currentStep === 0) {
+      return (
+        answers.consent === 'Sí, acepto participar'
+        && answers.gender
+        && answers.orientation
+      )
     }
 
-    if (!answers.gender || !answers.orientation) {
-      return 'Completa los datos generales antes de generar el resultado.'
+    if (currentStep === 1) {
+      return answers.academicPerformance.length > 0
     }
 
-    if (answers.academicPerformance.length === 0 || answers.interests.length === 0) {
-      return 'Selecciona al menos una opción en desempeño e intereses.'
+    if (currentStep === 2) {
+      return answers.interests.length > 0
     }
 
-    if (answers.skills.length === 0 || answers.preferredActivities.length === 0) {
-      return 'Selecciona al menos una opción en habilidades y actividades preferidas.'
-    }
-
-    return ''
+    return (
+      answers.skills.length > 0
+      && answers.preferredActivities.length > 0
+    )
   }
 
-  const handleSubmit = async () => {
-    const validationMessage = validateAnswers()
+  const goNext = () => {
+    setErrorMessage('')
 
-    if (validationMessage) {
-      setSubmitError(validationMessage)
+    if (!isCurrentStepValid()) {
+      setErrorMessage(
+        'Completa esta sección antes de continuar. En las preguntas múltiples puedes seleccionar de 1 a 3 opciones.',
+      )
       return
     }
 
-    setSubmitError('')
-    setIsSubmitting(true)
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const goBack = () => {
+    setErrorMessage('')
+
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const handleSubmit = async () => {
+    setErrorMessage('')
+
+    if (!isCurrentStepValid()) {
+      setErrorMessage(
+        'Completa la última sección antes de generar el resultado.',
+      )
+      return
+    }
 
     const payload = {
       general_data: {
         consent: answers.consent,
         gender: answers.gender,
-        orientation: answers.orientation,
+        vocational_orientation_previous: answers.orientation,
       },
       academic_performance: {
         selected_options: answers.academicPerformance,
@@ -221,22 +235,62 @@ function QuestionnairePage() {
         preferred_activities: answers.preferredActivities,
       },
       vocational_security: {
-        questionnaire_version: 'compacta',
+        questionnaire_version: 'prototipo_preguntas_1_a_7',
+        note: 'El formulario del prototipo no solicita área de interés, seguridad de elección ni segunda área, porque el área recomendada corresponde a la salida del sistema.',
       },
     }
 
     try {
+      setIsSubmitting(true)
+
       const result = await generateRecommendation(payload)
+
       sessionStorage.setItem('vocai_result', JSON.stringify(result))
+
       navigate('/resultado')
-    } catch (error) {
-      setSubmitError(
-        'No se pudo generar el resultado. Verifica que el backend esté activo.',
+    } catch {
+      setErrorMessage(
+        'No se pudo generar el resultado. Verifica que el backend esté activo e inténtalo nuevamente.',
       )
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  const renderMultiSelectQuestion = (
+    title: string,
+    description: string,
+    field: MultiSelectField,
+    options: string[],
+  ) => (
+    <div>
+      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            {description}
+          </p>
+        </div>
+
+        <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+          {answers[field].length}/3 seleccionadas
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => toggleMultiAnswer(field, option)}
+            className={getMultiOptionClass(answers[field].includes(option))}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
@@ -284,7 +338,8 @@ function QuestionnairePage() {
 
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Las respuestas permiten organizar información académica y
-              vocacional para generar una recomendación por áreas.
+              vocacional para generar una recomendación por áreas. El formulario
+              no solicita que el estudiante elija el área final.
             </p>
 
             <div className="mt-6">
@@ -312,10 +367,7 @@ function QuestionnairePage() {
                   <button
                     key={step.title}
                     type="button"
-                    onClick={() => {
-                      setSubmitError('')
-                      setCurrentStep(index)
-                    }}
+                    onClick={() => setCurrentStep(index)}
                     className={`flex w-full items-start gap-3 rounded-2xl border px-4 py-4 text-left transition ${
                       isActive
                         ? 'border-blue-200 bg-blue-50'
@@ -331,7 +383,11 @@ function QuestionnairePage() {
                             : 'bg-slate-100 text-slate-500'
                       }`}
                     >
-                      {isDone ? <CheckCircle2 size={20} /> : <StepIcon size={20} />}
+                      {isDone ? (
+                        <CheckCircle2 size={20} />
+                      ) : (
+                        <StepIcon size={20} />
+                      )}
                     </div>
 
                     <div>
@@ -356,8 +412,8 @@ function QuestionnairePage() {
             <div className="flex items-start gap-3">
               <GraduationCap className="mt-1 text-emerald-600" size={22} />
               <p className="text-sm leading-6 text-emerald-800">
-                No existen respuestas correctas o incorrectas. La información se
-                utiliza únicamente con fines académicos y no solicita datos
+                No existen respuestas correctas o incorrectas. La información
+                se utiliza únicamente con fines académicos y no solicita datos
                 directamente identificables.
               </p>
             </div>
@@ -382,33 +438,46 @@ function QuestionnairePage() {
             </div>
 
             <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
-              Versión compacta
+              Versión prototipo
             </span>
           </div>
+
+          {errorMessage && (
+            <div className="mt-6 flex items-start gap-2 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertCircle className="mt-0.5 shrink-0" size={18} />
+              <p>{errorMessage}</p>
+            </div>
+          )}
 
           <div className="mt-7">
             {currentStep === 0 && (
               <div className="space-y-7">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">
-                    ¿Aceptas participar voluntariamente?
+                    ¿Aceptas participar voluntariamente en esta encuesta con
+                    fines académicos?
                   </h3>
+
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    La participación es voluntaria y la información será utilizada
-                    únicamente con fines académicos.
+                    La participación es voluntaria y la información será
+                    utilizada únicamente con fines académicos.
                   </p>
 
                   <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {['Sí, acepto participar', 'No acepto participar'].map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => selectSingleAnswer('consent', option)}
-                        className={getSingleOptionClass(answers.consent === option)}
-                      >
-                        {option}
-                      </button>
-                    ))}
+                    {['Sí, acepto participar', 'No acepto participar'].map(
+                      (option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => selectSingleAnswer('consent', option)}
+                          className={getSingleOptionClass(
+                            answers.consent === option,
+                          )}
+                        >
+                          {option}
+                        </button>
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -421,7 +490,9 @@ function QuestionnairePage() {
                         key={option}
                         type="button"
                         onClick={() => selectSingleAnswer('gender', option)}
-                        className={getSingleOptionClass(answers.gender === option)}
+                        className={getSingleOptionClass(
+                          answers.gender === option,
+                        )}
                       >
                         {option}
                       </button>
@@ -431,7 +502,8 @@ function QuestionnairePage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">
-                    ¿Has recibido orientación vocacional o profesional?
+                    ¿Has participado antes en charlas, test o actividades de
+                    orientación vocacional?
                   </h3>
 
                   <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -439,8 +511,12 @@ function QuestionnairePage() {
                       <button
                         key={option}
                         type="button"
-                        onClick={() => selectSingleAnswer('orientation', option)}
-                        className={getSingleOptionClass(answers.orientation === option)}
+                        onClick={() =>
+                          selectSingleAnswer('orientation', option)
+                        }
+                        className={getSingleOptionClass(
+                          answers.orientation === option,
+                        )}
                       >
                         {option}
                       </button>
@@ -452,174 +528,73 @@ function QuestionnairePage() {
 
             {currentStep === 1 && (
               <div className="space-y-7">
-                <div>
-                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900">
-                        ¿En qué asignaturas o áreas consideras que tienes mejor desempeño?
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Selecciona máximo 3 opciones.
-                      </p>
-                    </div>
-
-                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
-                      {answers.academicPerformance.length}/3 seleccionadas
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {academicPerformanceOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => toggleMultiAnswer('academicPerformance', option)}
-                        className={getMultiOptionClass(
-                          answers.academicPerformance.includes(option),
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900">
-                        ¿Qué tipo de actividades te generan mayor interés?
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Selecciona máximo 3 opciones.
-                      </p>
-                    </div>
-
-                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
-                      {answers.interests.length}/3 seleccionadas
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {interestOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => toggleMultiAnswer('interests', option)}
-                        className={getMultiOptionClass(answers.interests.includes(option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {renderMultiSelectQuestion(
+                  '¿En qué materias o áreas consideras que tienes mejor desempeño académico?',
+                  'Marca de 1 a 3 opciones que se relacionen contigo.',
+                  'academicPerformance',
+                  academicPerformanceOptions,
+                )}
               </div>
             )}
 
             {currentStep === 2 && (
               <div className="space-y-7">
-                <div>
-                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900">
-                        ¿Qué habilidades consideras que se relacionan más contigo?
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Selecciona máximo 3 opciones.
-                      </p>
-                    </div>
+                {renderMultiSelectQuestion(
+                  '¿Qué tipo de actividades te generan mayor interés?',
+                  'Marca de 1 a 3 opciones que se relacionen contigo.',
+                  'interests',
+                  interestOptions,
+                )}
+              </div>
+            )}
 
-                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
-                      {answers.skills.length}/3 seleccionadas
-                    </span>
-                  </div>
+            {currentStep === 3 && (
+              <div className="space-y-7">
+                {renderMultiSelectQuestion(
+                  '¿Qué habilidades consideras que se relacionan más contigo?',
+                  'Marca de 1 a 3 opciones que se relacionen contigo.',
+                  'skills',
+                  skillOptions,
+                )}
 
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {skillOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => toggleMultiAnswer('skills', option)}
-                        className={getMultiOptionClass(answers.skills.includes(option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900">
-                        ¿Qué tipo de actividades prefieres realizar?
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Selecciona máximo 3 opciones.
-                      </p>
-                    </div>
-
-                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
-                      {answers.preferredActivities.length}/3 seleccionadas
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {preferredActivityOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => toggleMultiAnswer('preferredActivities', option)}
-                        className={getMultiOptionClass(
-                          answers.preferredActivities.includes(option),
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {renderMultiSelectQuestion(
+                  '¿Qué tipo de actividades prefieres realizar?',
+                  'Marca de 1 a 3 opciones que se relacionen contigo.',
+                  'preferredActivities',
+                  preferredActivityOptions,
+                )}
               </div>
             )}
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6">
-            {submitError && (
-              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-                {submitError}
-              </p>
-            )}
+          <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
+            <button
+              type="button"
+              onClick={goBack}
+              disabled={currentStep === 0}
+              className="rounded-2xl border border-slate-200 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Anterior
+            </button>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+            {currentStep < steps.length - 1 ? (
               <button
                 type="button"
-                onClick={goBack}
-                disabled={currentStep === 0 || isSubmitting}
-                className="rounded-2xl border border-slate-200 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={goNext}
+                className="rounded-2xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
               >
-                Anterior
+                Siguiente sección
               </button>
-
-              {currentStep < steps.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={goNext}
-                  disabled={isSubmitting}
-                  className="rounded-2xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Siguiente sección
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="rounded-2xl bg-emerald-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting ? 'Generando resultado...' : 'Ver resultado'}
-                </button>
-              )}
-            </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="rounded-2xl bg-emerald-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSubmitting ? 'Generando resultado...' : 'Ver resultado'}
+              </button>
+            )}
           </div>
         </section>
       </section>
@@ -628,3 +603,4 @@ function QuestionnairePage() {
 }
 
 export default QuestionnairePage
+
