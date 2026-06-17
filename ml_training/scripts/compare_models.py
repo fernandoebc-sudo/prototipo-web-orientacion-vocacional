@@ -228,7 +228,7 @@ def main():
     print(results_df)
 
     print(f"\nArchivo guardado en: {OUTPUT_PATH}")
-
+    
 
 if __name__ == "__main__":
     main()

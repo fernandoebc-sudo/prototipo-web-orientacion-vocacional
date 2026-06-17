@@ -1,10 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from app.db.database import get_db
 from app.schemas.questionnaire import (
     QuestionnaireResponse,
     QuestionnaireSubmitRequest,
     QuestionnaireSubmitResponse,
 )
+from app.services.recommendation_service import save_recommendation_result
+
 
 router = APIRouter(prefix="/questionnaire", tags=["Cuestionario"])
 
@@ -18,41 +22,36 @@ def get_questions():
             {
                 "name": "Datos generales",
                 "items": [
-                    "Tipo de institución",
-                    "Participación previa en orientación vocacional"
-                ]
+                    "Participación previa en orientación vocacional",
+                ],
             },
             {
                 "name": "Desempeño académico",
                 "items": [
-                    "Matemáticas o Física",
-                    "Comunicación y Lengua",
-                    "Ciencias Naturales"
-                ]
+                    "Matemáticas y razonamiento lógico",
+                    "Física, química o biología",
+                    "Lengua, lectura o comunicación",
+                    "Ciencias sociales o historia",
+                    "Informática, tecnología o programación",
+                    "Arte, diseño o creatividad",
+                    "Actividades prácticas o experimentos",
+                ],
             },
             {
-                "name": "Intereses y habilidades",
+                "name": "Intereses, habilidades y preferencias",
                 "items": [
-                    "Resolver problemas técnicos",
-                    "Ayudar o cuidar a otras personas",
-                    "Crear contenido artístico"
-                ]
+                    "Intereses académicos y vocacionales",
+                    "Habilidades percibidas",
+                    "Actividades preferidas",
+                ],
             },
-            {
-                "name": "Seguridad vocacional",
-                "items": [
-                    "Área de interés actual",
-                    "Nivel de seguridad sobre la elección"
-                ]
-            }
-        ]
+        ],
     }
 
 
 @router.post("/submit", response_model=QuestionnaireSubmitResponse)
-def submit_questionnaire(data: QuestionnaireSubmitRequest):
-    return {
-        "status": "ok",
-        "message": "Respuestas recibidas de forma referencial",
-        "next_step": "Generar recomendación académica por área"
-    }
+def submit_questionnaire(
+    data: QuestionnaireSubmitRequest,
+    db: Session = Depends(get_db),
+):
+    return save_recommendation_result(db=db, data=data)

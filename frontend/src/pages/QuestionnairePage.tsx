@@ -16,7 +16,7 @@ import { generateRecommendation } from '../services/api'
 const steps = [
   {
     title: 'Datos generales',
-    description: 'Consentimiento e información básica no identificable.',
+    description: 'Información básica no identificable.',
     icon: School,
   },
   {
@@ -104,7 +104,6 @@ function QuestionnairePage() {
   const [errorMessage, setErrorMessage] = useState('')
 
   const [answers, setAnswers] = useState({
-    consent: '',
     gender: '',
     orientation: '',
     academicPerformance: [] as string[],
@@ -119,7 +118,7 @@ function QuestionnairePage() {
   )
 
   const selectSingleAnswer = (
-    field: 'consent' | 'gender' | 'orientation',
+    field: 'gender' | 'orientation',
     value: string,
   ) => {
     setAnswers((previousAnswers) => ({
@@ -166,11 +165,7 @@ function QuestionnairePage() {
 
   const isCurrentStepValid = () => {
     if (currentStep === 0) {
-      return (
-        answers.consent === 'Sí, acepto participar'
-        && answers.gender
-        && answers.orientation
-      )
+      return answers.gender && answers.orientation
     }
 
     if (currentStep === 1) {
@@ -222,7 +217,6 @@ function QuestionnairePage() {
 
     const payload = {
       general_data: {
-        consent: answers.consent,
         gender: answers.gender,
         vocational_orientation_previous: answers.orientation,
       },
@@ -453,35 +447,6 @@ function QuestionnairePage() {
             {currentStep === 0 && (
               <div className="space-y-7">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    ¿Aceptas participar voluntariamente en esta encuesta con
-                    fines académicos?
-                  </h3>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    La participación es voluntaria y la información será
-                    utilizada únicamente con fines académicos.
-                  </p>
-
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {['Sí, acepto participar', 'No acepto participar'].map(
-                      (option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => selectSingleAnswer('consent', option)}
-                          className={getSingleOptionClass(
-                            answers.consent === option,
-                          )}
-                        >
-                          {option}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-
-                <div>
                   <h3 className="text-lg font-bold text-slate-900">Género</h3>
 
                   <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -603,4 +568,3 @@ function QuestionnairePage() {
 }
 
 export default QuestionnairePage
-

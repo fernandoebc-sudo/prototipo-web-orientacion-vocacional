@@ -4,15 +4,23 @@ export type ModelPrediction = {
   affinity: number
 }
 
+export type SecondaryArea = {
+  area: string
+  affinity: number
+}
+
 export type StudentResult = {
   status: string
   recommended_area: string
   affinity: number
+  secondary_areas?: SecondaryArea[]
+  interpretation?: string
   model_1: ModelPrediction
   model_2: ModelPrediction
   message: string
   questionnaire_response_id: number
   recommendation_result_id: number
+  next_step?: string | null
 }
 
 export type QuestionnairePayload = {
@@ -64,7 +72,7 @@ function getAdminAuthHeaders() {
 export async function generateRecommendation(
   payload: QuestionnairePayload,
 ): Promise<StudentResult> {
-  const response = await fetch(`${API_BASE_URL}/results/recommendation`, {
+  const response = await fetch(`${API_BASE_URL}/questionnaire/submit`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

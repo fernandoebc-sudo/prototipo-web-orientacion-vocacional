@@ -14,27 +14,6 @@ import {
 import { Link } from 'react-router-dom'
 import type { StudentResult } from '../services/api'
 
-const secondaryAreas = [
-  {
-    name: 'Ciencias exactas y agrarias',
-    value: '72%',
-    width: 'w-[72%]',
-    color: 'bg-blue-500',
-  },
-  {
-    name: 'Administrativas y contables',
-    value: '64%',
-    width: 'w-[64%]',
-    color: 'bg-emerald-500',
-  },
-  {
-    name: 'Humanísticas y sociales',
-    value: '58%',
-    width: 'w-[58%]',
-    color: 'bg-slate-500',
-  },
-]
-
 function getStoredResult(): StudentResult | null {
   const storedResult = sessionStorage.getItem('vocai_result')
 
@@ -47,6 +26,41 @@ function getStoredResult(): StudentResult | null {
   } catch (error) {
     return null
   }
+}
+
+function formatPercentage(value: number | undefined | null) {
+  if (value === undefined || value === null) {
+    return '0%'
+  }
+
+  const roundedValue = Number(value.toFixed(2))
+  return `${roundedValue}%`
+}
+
+function getWidthClass(value: number | undefined | null) {
+  const safeValue = value ?? 0
+
+  if (safeValue >= 95) return 'w-[95%]'
+  if (safeValue >= 90) return 'w-[90%]'
+  if (safeValue >= 85) return 'w-[85%]'
+  if (safeValue >= 80) return 'w-[80%]'
+  if (safeValue >= 75) return 'w-[75%]'
+  if (safeValue >= 70) return 'w-[70%]'
+  if (safeValue >= 65) return 'w-[65%]'
+  if (safeValue >= 60) return 'w-[60%]'
+  if (safeValue >= 55) return 'w-[55%]'
+  if (safeValue >= 50) return 'w-[50%]'
+  if (safeValue >= 45) return 'w-[45%]'
+  if (safeValue >= 40) return 'w-[40%]'
+  if (safeValue >= 35) return 'w-[35%]'
+  if (safeValue >= 30) return 'w-[30%]'
+  if (safeValue >= 25) return 'w-[25%]'
+  if (safeValue >= 20) return 'w-[20%]'
+  if (safeValue >= 15) return 'w-[15%]'
+  if (safeValue >= 10) return 'w-[10%]'
+  if (safeValue >= 5) return 'w-[5%]'
+
+  return 'w-0'
 }
 
 function ResultPage() {
@@ -84,9 +98,14 @@ function ResultPage() {
     )
   }
 
-  const affinityText = `${result.affinity}%`
-  const model1AffinityText = `${result.model_1.affinity}%`
-  const model2AffinityText = `${result.model_2.affinity}%`
+  const affinityText = formatPercentage(result.affinity)
+  const model1AffinityText = formatPercentage(result.model_1?.affinity)
+  const model2AffinityText = formatPercentage(result.model_2?.affinity)
+
+  const model1WidthClass = getWidthClass(result.model_1?.affinity)
+  const model2WidthClass = getWidthClass(result.model_2?.affinity)
+
+  const secondaryAreas = result.secondary_areas ?? []
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
@@ -182,17 +201,17 @@ function ResultPage() {
               </div>
 
               <h3 className="mt-5 text-xl font-extrabold text-slate-950">
-                {result.model_1.name}
+                {result.model_1?.name ?? 'Modelo 1'}
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Recomendación principal: {result.model_1.area}.
+                Recomendación principal:{' '}
+                {result.model_1?.area ?? result.recommended_area}.
               </p>
 
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-blue-100">
                 <div
-                  className="h-full rounded-full bg-blue-600"
-                  style={{ width: model1AffinityText }}
+                  className={`h-full rounded-full bg-blue-600 ${model1WidthClass}`}
                 ></div>
               </div>
             </div>
@@ -209,17 +228,17 @@ function ResultPage() {
               </div>
 
               <h3 className="mt-5 text-xl font-extrabold text-slate-950">
-                {result.model_2.name}
+                {result.model_2?.name ?? 'Modelo 2'}
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Recomendación principal: {result.model_2.area}.
+                Recomendación principal:{' '}
+                {result.model_2?.area ?? result.recommended_area}.
               </p>
 
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-emerald-100">
                 <div
-                  className="h-full rounded-full bg-emerald-500"
-                  style={{ width: model2AffinityText }}
+                  className={`h-full rounded-full bg-emerald-500 ${model2WidthClass}`}
                 ></div>
               </div>
             </div>
@@ -263,24 +282,36 @@ function ResultPage() {
             </div>
 
             <div className="mt-6 space-y-5">
-              {secondaryAreas.map((area) => (
-                <div key={area.name}>
-                  <div className="mb-2 flex justify-between text-sm">
-                    <span className="font-semibold text-slate-700">
-                      {area.name}
-                    </span>
-                    <span className="font-bold text-slate-900">
-                      {area.value}
-                    </span>
-                  </div>
+              {secondaryAreas.length > 0 ? (
+                secondaryAreas.map((area) => {
+                  const areaAffinityText = formatPercentage(area.affinity)
+                  const areaWidthClass = getWidthClass(area.affinity)
 
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-                    <div
-                      className={`h-full rounded-full ${area.color} ${area.width}`}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                  return (
+                    <div key={area.area}>
+                      <div className="mb-2 flex justify-between text-sm">
+                        <span className="font-semibold text-slate-700">
+                          {area.area}
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          {areaAffinityText}
+                        </span>
+                      </div>
+
+                      <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className={`h-full rounded-full bg-blue-500 ${areaWidthClass}`}
+                        ></div>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <p className="text-sm leading-6 text-slate-600">
+                  No se identificaron áreas complementarias con afinidad
+                  suficiente según las reglas definidas para el prototipo.
+                </p>
+              )}
             </div>
           </div>
 
@@ -292,9 +323,8 @@ function ResultPage() {
                   Interpretación sugerida
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-emerald-800">
-                  La recomendación debe entenderse como apoyo para iniciar una
-                  conversación de orientación. El estudiante puede revisar el
-                  resultado junto con docentes, tutores u orientadores.
+                  {result.interpretation ??
+                    'La recomendación debe entenderse como apoyo para iniciar una conversación de orientación. El estudiante puede revisar el resultado junto con docentes, tutores u orientadores.'}
                 </p>
               </div>
             </div>
@@ -323,9 +353,8 @@ function ResultPage() {
                 <span className="font-bold">
                   #{result.recommendation_result_id}
                 </span>
-                . Los valores mostrados aún son referenciales para la versión
-                inicial del prototipo y serán reemplazados por resultados
-                generados a partir de los modelos integrados.
+                . Los valores mostrados fueron generados por los modelos de
+                Machine Learning integrados al backend del prototipo.
               </p>
             </div>
           </div>
