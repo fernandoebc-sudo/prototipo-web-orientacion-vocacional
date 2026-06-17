@@ -10,8 +10,8 @@ from app.schemas.admin import (
 from app.services.admin_service import (
     get_database_records,
     get_database_stats,
+    get_model_analytics_data,
     get_reference_export,
-    get_reference_model_analytics,
 )
 
 
@@ -36,9 +36,10 @@ def get_stats(
 
 @router.get("/model-analytics")
 def get_model_analytics(
+    db: Session = Depends(get_db),
     admin: dict = Depends(require_admin),
 ):
-    return get_reference_model_analytics()
+    return get_model_analytics_data(db)
 
 
 @router.get("/export")

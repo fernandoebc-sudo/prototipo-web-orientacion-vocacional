@@ -58,6 +58,42 @@ export type LoginResponse = {
   message: string
 }
 
+export type AdminModelMetricItem = {
+  metric: string
+  model_1: number
+  model_2: number
+  description: string
+}
+
+export type AdminModelInfo = {
+  label: string
+  name: string
+  accuracy: number
+  precision_macro: number
+  recall_macro: number
+  f1_macro: number
+}
+
+export type AdminAreaSummaryItem = {
+  area: string
+  total: number
+  average_affinity: number
+}
+
+export type AdminModelAnalyticsResponse = {
+  status: string
+  message: string
+  metrics_source: string
+  model_1: AdminModelInfo
+  model_2: AdminModelInfo
+  best_model: AdminModelInfo
+  evaluated_records: number
+  agreement_percentage: number
+  disagreement_percentage: number
+  area_summary: AdminAreaSummaryItem[]
+  metrics: AdminModelMetricItem[]
+}
+
 const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
 
 function getAdminAuthHeaders() {
@@ -106,6 +142,18 @@ export async function getAdminStats(): Promise<AdminStatsResponse> {
 
   if (!response.ok) {
     throw new Error('No se pudieron obtener las estadísticas')
+  }
+
+  return response.json()
+}
+
+export async function getAdminModelAnalytics(): Promise<AdminModelAnalyticsResponse> {
+  const response = await fetch(`${API_BASE_URL}/admin/model-analytics`, {
+    headers: getAdminAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error('No se pudo obtener la analítica de modelos')
   }
 
   return response.json()
