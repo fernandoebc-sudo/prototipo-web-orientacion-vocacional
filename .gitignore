@@ -37,3 +37,9 @@ __pycache__/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Datos y resultados temporales de entrenamiento ML
+ml_training/data/
+ml_training/outputs/confusion_matrices/
+ml_training/outputs/metrics/classification_report_*.json
+ml_training/outputs/metrics/model_comparison_extra.csv
