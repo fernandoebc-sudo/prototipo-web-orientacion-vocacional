@@ -1,0 +1,4 @@
+{
+    "model_1_name": "svm",
+    "model_2_name": "xgboost"
+}
