@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -18,6 +20,20 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return password_context.verify(plain_password, hashed_password)
+
+
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+def hash_email(email: str) -> str:
+    normalized_email = normalize_email(email)
+
+    return hmac.new(
+        settings.email_hash_secret.encode("utf-8"),
+        normalized_email.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 def create_access_token(data: dict) -> str:
@@ -58,6 +74,19 @@ def require_admin(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos de administrador",
+        )
+
+    return payload
+
+def require_student(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict:
+    payload = decode_access_token(credentials.credentials)
+
+    if payload.get("role") != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos de estudiante",
         )
 
     return payload

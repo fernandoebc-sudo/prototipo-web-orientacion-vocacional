@@ -6,6 +6,9 @@ from app.db.database import get_db
 from app.schemas.auth import (
     AdminLoginRequest,
     CreateAdminRequest,
+    CreateStudentAccessCodeRequest,
+    CreateStudentAccessCodesBulkRequest,
+    StudentAccessCodesBulkResponse,
     StudentAccessCodesResponse,
     StudentLoginRequest,
     TokenResponse,
@@ -14,6 +17,7 @@ from app.services.auth_service import (
     authenticate_admin,
     create_initial_admin,
     create_student_access_code,
+    create_student_access_codes_bulk,
     list_student_access_codes,
     validate_student_access_code,
 )
@@ -42,16 +46,29 @@ def student_login(
     data: StudentLoginRequest,
     db: Session = Depends(get_db),
 ):
-    return validate_student_access_code(db, data.code)
+    return validate_student_access_code(db, data.email, data.code)
 
 
 @router.post("/student-codes", response_model=StudentAccessCodesResponse)
 def generate_student_code(
+    data: CreateStudentAccessCodeRequest,
     db: Session = Depends(get_db),
     admin: dict = Depends(require_admin),
 ):
-    create_student_access_code(db)
+    create_student_access_code(db, data.email)
     return list_student_access_codes(db)
+
+
+@router.post(
+    "/student-codes/bulk",
+    response_model=StudentAccessCodesBulkResponse,
+)
+def generate_student_codes_bulk(
+    data: CreateStudentAccessCodesBulkRequest,
+    db: Session = Depends(get_db),
+    admin: dict = Depends(require_admin),
+):
+    return create_student_access_codes_bulk(db, data.emails)
 
 
 @router.get("/student-codes", response_model=StudentAccessCodesResponse)

@@ -1,45 +1,55 @@
+import { useEffect, useMemo, useState } from 'react'
 import {
+  AlertCircle,
   CheckCircle2,
   Clipboard,
   KeyRound,
+  Mail,
   Plus,
-  RefreshCw,
+  RefreshCcw,
+  Send,
   ShieldCheck,
-  XCircle,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
 import AdminSidebar from '../components/AdminSidebar'
 import {
   createStudentAccessCode,
+  createStudentAccessCodesBulk,
   getStudentAccessCodes,
   type StudentAccessCodeItem,
 } from '../services/api'
 
 function AdminAccessCodesPage() {
   const [codes, setCodes] = useState<StudentAccessCodeItem[]>([])
+  const [studentEmail, setStudentEmail] = useState('')
+  const [bulkEmailsText, setBulkEmailsText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
+  const [isCreatingBulk, setIsCreatingBulk] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [bulkDetails, setBulkDetails] = useState<string[]>([])
 
-  const availableCodes = useMemo(
-    () => codes.filter((code) => code.is_active && !code.is_used).length,
-    [codes],
-  )
+  const bulkEmails = useMemo(() => {
+    return bulkEmailsText
+      .split(/\r?\n|,/)
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean)
+  }, [bulkEmailsText])
 
-  const usedCodes = useMemo(
-    () => codes.filter((code) => code.is_used).length,
-    [codes],
-  )
+  const uniqueBulkEmails = useMemo(() => {
+    return Array.from(new Set(bulkEmails))
+  }, [bulkEmails])
 
   const loadCodes = async () => {
     try {
+      setIsLoading(true)
       setErrorMessage('')
+
       const response = await getStudentAccessCodes()
       setCodes(response.codes)
     } catch {
       setErrorMessage(
-        'No se pudieron cargar los códigos. Verifica que el backend esté activo y que la sesión administrativa sea válida.',
+        'No se pudieron cargar los códigos de acceso. Verifica que la sesión administrativa siga activa.',
       )
     } finally {
       setIsLoading(false)
@@ -51,171 +61,323 @@ function AdminAccessCodesPage() {
   }, [])
 
   const handleCreateCode = async () => {
+    const formattedEmail = studentEmail.trim().toLowerCase()
+
+    if (!formattedEmail) {
+      setErrorMessage('Ingresa el correo institucional del estudiante.')
+      return
+    }
+
     try {
       setIsCreating(true)
       setErrorMessage('')
       setSuccessMessage('')
+      setBulkDetails([])
 
-      const response = await createStudentAccessCode()
+      const response = await createStudentAccessCode(formattedEmail)
+
       setCodes(response.codes)
-      setSuccessMessage('Código de acceso generado correctamente.')
+      setStudentEmail('')
+      setSuccessMessage(
+        'Código generado y enviado correctamente al correo indicado.',
+      )
     } catch {
-      setErrorMessage('No se pudo generar el código de acceso.')
+      setErrorMessage(
+        'No se pudo generar o enviar el código. Verifica el correo, la sesión administrativa o la configuración SMTP.',
+      )
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  const handleCreateBulkCodes = async () => {
+    if (uniqueBulkEmails.length === 0) {
+      setErrorMessage('Ingresa al menos un correo institucional en el lote.')
+      return
+    }
+
+    if (uniqueBulkEmails.length > 20) {
+      setErrorMessage('Solo se permite enviar un máximo de 20 correos por lote.')
+      return
+    }
+
+    try {
+      setIsCreatingBulk(true)
+      setErrorMessage('')
+      setSuccessMessage('')
+      setBulkDetails([])
+
+      const response = await createStudentAccessCodesBulk(uniqueBulkEmails)
+
+      setCodes(response.codes)
+      setBulkEmailsText('')
+      setBulkDetails(response.details)
+      setSuccessMessage(
+        `Lote finalizado. Generados: ${response.created}. Omitidos: ${response.skipped}. Errores: ${response.failed}.`,
+      )
+    } catch {
+      setErrorMessage(
+        'No se pudo procesar el lote. Verifica los correos, la sesión administrativa o la configuración SMTP.',
+      )
+    } finally {
+      setIsCreatingBulk(false)
     }
   }
 
   const handleCopyCode = async (code: string) => {
     try {
       await navigator.clipboard.writeText(code)
-      setSuccessMessage(`Código ${code} copiado al portapapeles.`)
+      setSuccessMessage('Código copiado al portapapeles.')
+      setErrorMessage('')
     } catch {
       setErrorMessage('No se pudo copiar el código.')
     }
   }
 
+  const availableCodes = codes.filter((code) => !code.is_used && code.is_active)
+  const usedCodes = codes.filter((code) => code.is_used)
+
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <AdminSidebar />
 
-      <section className="lg:pl-72">
-        <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-                <KeyRound size={16} />
-                Acceso estudiantil
-              </span>
+      <main className="min-h-screen px-6 py-8 lg:ml-72">
+        <section className="mx-auto max-w-7xl space-y-6">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
+              <KeyRound size={16} />
+              Acceso estudiantil
+            </span>
 
-              <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950">
-                Códigos de acceso
-              </h2>
+            <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950">
+              Códigos de acceso
+            </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Generación y consulta de códigos anónimos para permitir el
-                ingreso de estudiantes al cuestionario vocacional-académico.
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Generación individual y masiva de códigos asociados a correos
+              institucionales. El correo se utiliza para enviar y validar el
+              acceso, pero se almacena en la base de datos mediante hash.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                  <Mail size={22} />
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-950">
+                    Generar código individual
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    Envía un código a un correo institucional específico.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <label
+                  htmlFor="student-email"
+                  className="text-sm font-bold text-slate-700"
+                >
+                  Correo institucional del estudiante
+                </label>
+
+                <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                  <div className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-400 focus-within:bg-white">
+                    <Mail size={18} className="shrink-0 text-slate-400" />
+                    <input
+                      id="student-email"
+                      type="email"
+                      value={studentEmail}
+                      onChange={(event) => setStudentEmail(event.target.value)}
+                      placeholder="estudiante@institucion.edu.ec"
+                      className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCreateCode}
+                    disabled={isCreating}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <Plus size={18} />
+                    {isCreating ? 'Enviando...' : 'Generar y enviar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <Send size={22} />
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-950">
+                    Generar códigos en lote
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    Pega hasta 20 correos. Puedes escribir un correo por línea
+                    o separarlos por comas.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <label
+                  htmlFor="bulk-emails"
+                  className="text-sm font-bold text-slate-700"
+                >
+                  Lista de correos institucionales
+                </label>
+
+                <textarea
+                  id="bulk-emails"
+                  value={bulkEmailsText}
+                  onChange={(event) => setBulkEmailsText(event.target.value)}
+                  placeholder={
+                    'estudiante1@institucion.edu.ec\nestudiante2@institucion.edu.ec\nestudiante3@institucion.edu.ec'
+                  }
+                  rows={5}
+                  className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white"
+                />
+
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p
+                    className={`text-sm font-semibold ${
+                      uniqueBulkEmails.length > 20
+                        ? 'text-red-600'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    Correos detectados: {uniqueBulkEmails.length}/20
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleCreateBulkCodes}
+                    disabled={isCreatingBulk || uniqueBulkEmails.length > 20}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-100 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <Send size={18} />
+                    {isCreatingBulk
+                      ? 'Enviando lote...'
+                      : 'Generar y enviar lote'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-semibold text-slate-500">
+                Códigos generados
+              </p>
+              <p className="mt-2 text-3xl font-extrabold text-slate-950">
+                {codes.length}
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={handleCreateCode}
-              disabled={isCreating}
-              className="inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <Plus size={20} />
-              {isCreating ? 'Generando...' : 'Generar nuevo código'}
-            </button>
+            <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
+              <p className="text-sm font-semibold text-emerald-700">
+                Disponibles
+              </p>
+              <p className="mt-2 text-3xl font-extrabold text-emerald-800">
+                {availableCodes.length}
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
+              <p className="text-sm font-semibold text-blue-700">
+                Utilizados
+              </p>
+              <p className="mt-2 text-3xl font-extrabold text-blue-800">
+                {usedCodes.length}
+              </p>
+            </div>
           </div>
-        </header>
-
-        <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
-          <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-500">
-                    Total generados
-                  </p>
-                  <h3 className="mt-2 text-3xl font-extrabold text-slate-950">
-                    {codes.length}
-                  </h3>
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                  <KeyRound size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-500">
-                    Disponibles
-                  </p>
-                  <h3 className="mt-2 text-3xl font-extrabold text-emerald-700">
-                    {availableCodes}
-                  </h3>
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                  <CheckCircle2 size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-500">
-                    Utilizados
-                  </p>
-                  <h3 className="mt-2 text-3xl font-extrabold text-slate-950">
-                    {usedCodes}
-                  </h3>
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
-                  <ShieldCheck size={24} />
-                </div>
-              </div>
-            </div>
-          </section>
 
           {errorMessage && (
-            <div className="rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
-              {errorMessage}
+            <div className="flex items-start gap-3 rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
+              <AlertCircle className="mt-0.5 shrink-0" size={20} />
+              <p>{errorMessage}</p>
             </div>
           )}
 
           {successMessage && (
-            <div className="rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
-              {successMessage}
+            <div className="flex items-start gap-3 rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+              <CheckCircle2 className="mt-0.5 shrink-0" size={20} />
+              <p>{successMessage}</p>
             </div>
           )}
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-center md:justify-between">
+          {bulkDetails.length > 0 && (
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-lg font-extrabold text-slate-950">
+                Detalle del último lote
+              </h3>
+
+              <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                {bulkDetails.map((detail) => (
+                  <li
+                    key={detail}
+                    className="rounded-2xl bg-slate-50 px-4 py-2"
+                  >
+                    {detail}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <h3 className="text-xl font-extrabold text-slate-950">
-                  Listado de códigos
-                </h3>
+                <h2 className="text-xl font-extrabold text-slate-950">
+                  Códigos generados
+                </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Los códigos disponibles pueden ser entregados a estudiantes
-                  para ingresar al cuestionario.
+                  Consulta del estado de los códigos enviados a estudiantes.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={loadCodes}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                disabled={isLoading}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                <RefreshCw size={17} />
-                Actualizar
+                <RefreshCcw size={18} />
+                {isLoading ? 'Actualizando...' : 'Actualizar'}
               </button>
             </div>
 
-            <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200">
-              <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[900px] text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-5 py-4 font-bold">Código</th>
                     <th className="px-5 py-4 font-bold">Estado</th>
+                    <th className="px-5 py-4 font-bold">Correo asociado</th>
                     <th className="px-5 py-4 font-bold">Creado</th>
+                    <th className="px-5 py-4 font-bold">Enviado</th>
                     <th className="px-5 py-4 font-bold">Usado</th>
                     <th className="px-5 py-4 font-bold">Acción</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-slate-100">
                   {isLoading ? (
                     <tr>
                       <td
-                        colSpan={5}
-                        className="px-5 py-8 text-center text-slate-500"
+                        colSpan={7}
+                        className="px-5 py-10 text-center text-slate-500"
                       >
                         Cargando códigos de acceso...
                       </td>
@@ -223,35 +385,57 @@ function AdminAccessCodesPage() {
                   ) : codes.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
-                        className="px-5 py-8 text-center text-slate-500"
+                        colSpan={7}
+                        className="px-5 py-10 text-center text-slate-500"
                       >
-                        Aún no existen códigos generados.
+                        Aún no se han generado códigos de acceso.
                       </td>
                     </tr>
                   ) : (
                     codes.map((code) => (
-                      <tr key={code.id} className="bg-white">
-                        <td className="px-5 py-4 font-bold tracking-wide text-slate-950">
-                          {code.code}
+                      <tr key={code.id} className="hover:bg-slate-50">
+                        <td className="px-5 py-4">
+                          <div className="inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-3 py-2 font-mono text-sm font-bold text-slate-800">
+                            <KeyRound size={16} className="text-blue-600" />
+                            {code.code}
+                          </div>
                         </td>
 
                         <td className="px-5 py-4">
                           {code.is_used ? (
-                            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                              <XCircle size={14} />
-                              Usado
+                            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                              Utilizado
+                            </span>
+                          ) : code.is_active ? (
+                            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                              Disponible
                             </span>
                           ) : (
+                            <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                              Inactivo
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="px-5 py-4">
+                          {code.has_email ? (
                             <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                              <CheckCircle2 size={14} />
-                              Disponible
+                              <ShieldCheck size={14} />
+                              Hash registrado
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                              Sin correo
                             </span>
                           )}
                         </td>
 
                         <td className="px-5 py-4 text-slate-600">
                           {code.created_at}
+                        </td>
+
+                        <td className="px-5 py-4 text-slate-600">
+                          {code.sent_at ?? 'No enviado'}
                         </td>
 
                         <td className="px-5 py-4 text-slate-600">
@@ -262,8 +446,7 @@ function AdminAccessCodesPage() {
                           <button
                             type="button"
                             onClick={() => handleCopyCode(code.code)}
-                            disabled={code.is_used}
-                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
                           >
                             <Clipboard size={15} />
                             Copiar
@@ -275,10 +458,10 @@ function AdminAccessCodesPage() {
                 </tbody>
               </table>
             </div>
-          </section>
-        </div>
-      </section>
-    </main>
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }
 

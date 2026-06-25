@@ -5,7 +5,7 @@ from app.models.recommendation_result import RecommendationResult
 from app.schemas.questionnaire import QuestionnaireSubmitRequest
 from app.ml.encoder import encode_questionnaire_answers
 from app.ml.predictor import predict_vocai
-
+from app.services.auth_service import mark_student_access_code_as_used
 
 def generate_ml_recommendation(data: QuestionnaireSubmitRequest):
     """
@@ -61,6 +61,7 @@ def get_reference_student_result():
 def save_recommendation_result(
     db: Session,
     data: QuestionnaireSubmitRequest,
+    student_code: str | None = None,
 ):
     """
     Guarda las respuestas del cuestionario y el resultado generado por los modelos ML.
@@ -88,6 +89,9 @@ def save_recommendation_result(
     db.commit()
     db.refresh(recommendation_result)
 
+    if student_code:
+        mark_student_access_code_as_used(db, student_code)
+        
     return {
         **recommendation,
         "questionnaire_response_id": questionnaire_response.id,

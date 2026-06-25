@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core.security import require_student
 from app.db.database import get_db
 from app.schemas.questionnaire import QuestionnaireSubmitRequest
 from app.schemas.results import StoredStudentResultResponse, StudentResultResponse
@@ -21,5 +22,10 @@ def get_student_result():
 def generate_recommendation(
     data: QuestionnaireSubmitRequest,
     db: Session = Depends(get_db),
+    student: dict = Depends(require_student),
 ):
-    return save_recommendation_result(db, data)
+    return save_recommendation_result(
+        db=db,
+        data=data,
+        student_code=student["sub"],
+    )

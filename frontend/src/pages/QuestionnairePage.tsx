@@ -16,7 +16,7 @@ import { generateRecommendation } from '../services/api'
 const steps = [
   {
     title: 'Datos generales',
-    description: 'Información básica no identificable.',
+    description: 'Información básica.',
     icon: School,
   },
   {
@@ -303,7 +303,7 @@ function QuestionnairePage() {
                 Voc<span className="text-blue-600">AI</span>
               </h1>
               <p className="text-sm text-slate-500">
-                Cuestionario académico-vocacional
+                Cuestionario 
               </p>
             </div>
           </div>
@@ -332,8 +332,7 @@ function QuestionnairePage() {
 
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Las respuestas permiten organizar información académica y
-              vocacional para generar una recomendación por áreas. El formulario
-              no solicita que el estudiante elija el área final.
+              vocacional para generar una recomendación por áreas.
             </p>
 
             <div className="mt-6">

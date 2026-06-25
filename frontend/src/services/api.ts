@@ -35,6 +35,8 @@ export type AdminRecord = {
   recommended_area: string
   affinity: number
   created_at: string
+  model_1_result?: ModelPrediction | string | null
+  model_2_result?: ModelPrediction | string | null
 }
 
 export type AdminRecordsResponse = {
@@ -94,10 +96,46 @@ export type AdminModelAnalyticsResponse = {
   metrics: AdminModelMetricItem[]
 }
 
+export type StudentAccessCodeItem = {
+  id: number
+  code: string
+  has_email: boolean
+  is_active: boolean
+  is_used: boolean
+  created_at: string
+  used_at: string | null
+  sent_at: string | null
+}
+
+export type StudentAccessCodesResponse = {
+  status: string
+  message: string
+  codes: StudentAccessCodeItem[]
+}
+
+export type StudentAccessCodesBulkResponse = {
+  status: string
+  message: string
+  created: number
+  skipped: number
+  failed: number
+  details: string[]
+  codes: StudentAccessCodeItem[]
+}
+
 const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
 
 function getAdminAuthHeaders() {
   const token = localStorage.getItem('vocai_admin_token')
+
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  }
+}
+
+function getStudentAuthHeaders() {
+  const token = sessionStorage.getItem('vocai_student_token')
 
   return {
     'Content-Type': 'application/json',
@@ -110,9 +148,7 @@ export async function generateRecommendation(
 ): Promise<StudentResult> {
   const response = await fetch(`${API_BASE_URL}/questionnaire/submit`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getStudentAuthHeaders(),
     body: JSON.stringify(payload),
   })
 
@@ -178,35 +214,23 @@ export async function loginAdmin(
   return response.json()
 }
 
-export async function loginStudent(code: string): Promise<LoginResponse> {
+export async function loginStudent(
+  email: string,
+  code: string,
+): Promise<LoginResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/student-login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({ email, code }),
   })
 
   if (!response.ok) {
-    throw new Error('Código de acceso inválido o no disponible')
+    throw new Error('Correo o código de acceso inválido o no disponible')
   }
 
   return response.json()
-}
-
-export type StudentAccessCodeItem = {
-  id: number
-  code: string
-  is_active: boolean
-  is_used: boolean
-  created_at: string
-  used_at: string | null
-}
-
-export type StudentAccessCodesResponse = {
-  status: string
-  message: string
-  codes: StudentAccessCodeItem[]
 }
 
 export async function getStudentAccessCodes(): Promise<StudentAccessCodesResponse> {
@@ -221,14 +245,33 @@ export async function getStudentAccessCodes(): Promise<StudentAccessCodesRespons
   return response.json()
 }
 
-export async function createStudentAccessCode(): Promise<StudentAccessCodesResponse> {
+export async function createStudentAccessCode(
+  email: string,
+): Promise<StudentAccessCodesResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/student-codes`, {
     method: 'POST',
     headers: getAdminAuthHeaders(),
+    body: JSON.stringify({ email }),
   })
 
   if (!response.ok) {
-    throw new Error('No se pudo generar el código de acceso')
+    throw new Error('No se pudo generar y enviar el código de acceso')
+  }
+
+  return response.json()
+}
+
+export async function createStudentAccessCodesBulk(
+  emails: string[],
+): Promise<StudentAccessCodesBulkResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/student-codes/bulk`, {
+    method: 'POST',
+    headers: getAdminAuthHeaders(),
+    body: JSON.stringify({ emails }),
+  })
+
+  if (!response.ok) {
+    throw new Error('No se pudo generar y enviar el lote de códigos')
   }
 
   return response.json()
