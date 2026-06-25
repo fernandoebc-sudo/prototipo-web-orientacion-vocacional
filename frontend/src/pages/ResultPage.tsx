@@ -3,7 +3,6 @@ import {
   BarChart3,
   BrainCircuit,
   CheckCircle2,
-  Download,
   GraduationCap,
   Lightbulb,
   LineChart,
@@ -28,41 +27,6 @@ function getStoredResult(): StudentResult | null {
   }
 }
 
-function formatPercentage(value: number | undefined | null) {
-  if (value === undefined || value === null) {
-    return '0%'
-  }
-
-  const roundedValue = Number(value.toFixed(2))
-  return `${roundedValue}%`
-}
-
-function getWidthClass(value: number | undefined | null) {
-  const safeValue = value ?? 0
-
-  if (safeValue >= 95) return 'w-[95%]'
-  if (safeValue >= 90) return 'w-[90%]'
-  if (safeValue >= 85) return 'w-[85%]'
-  if (safeValue >= 80) return 'w-[80%]'
-  if (safeValue >= 75) return 'w-[75%]'
-  if (safeValue >= 70) return 'w-[70%]'
-  if (safeValue >= 65) return 'w-[65%]'
-  if (safeValue >= 60) return 'w-[60%]'
-  if (safeValue >= 55) return 'w-[55%]'
-  if (safeValue >= 50) return 'w-[50%]'
-  if (safeValue >= 45) return 'w-[45%]'
-  if (safeValue >= 40) return 'w-[40%]'
-  if (safeValue >= 35) return 'w-[35%]'
-  if (safeValue >= 30) return 'w-[30%]'
-  if (safeValue >= 25) return 'w-[25%]'
-  if (safeValue >= 20) return 'w-[20%]'
-  if (safeValue >= 15) return 'w-[15%]'
-  if (safeValue >= 10) return 'w-[10%]'
-  if (safeValue >= 5) return 'w-[5%]'
-
-  return 'w-0'
-}
-
 function ResultPage() {
   const result = getStoredResult()
 
@@ -83,7 +47,7 @@ function ResultPage() {
 
           <p className="mt-3 leading-7 text-slate-600">
             Para visualizar una recomendación, primero debes completar el
-            cuestionario académico-vocacional.
+            cuestionario.
           </p>
 
           <Link
@@ -98,13 +62,10 @@ function ResultPage() {
     )
   }
 
-  const affinityText = formatPercentage(result.affinity)
-  const model1AffinityText = formatPercentage(result.model_1?.affinity)
-  const model2AffinityText = formatPercentage(result.model_2?.affinity)
-
-  const model1WidthClass = getWidthClass(result.model_1?.affinity)
-  const model2WidthClass = getWidthClass(result.model_2?.affinity)
-
+  const roundedAffinity = Math.round(result.affinity)
+  const affinityText = `${roundedAffinity}%`
+  const model1AffinityText = `${Math.round(result.model_1.affinity)}%`
+  const model2AffinityText = `${Math.round(result.model_2.affinity)}%`
   const secondaryAreas = result.secondary_areas ?? []
 
   return (
@@ -158,7 +119,7 @@ function ResultPage() {
                 </h2>
 
                 <p className="mt-4 max-w-2xl leading-7 text-slate-600">
-                  Tus respuestas fueron procesadas por el backend del prototipo
+                  Tus respuestas fueron procesadas por el prototipo
                   y registradas en la base de datos. El resultado mostrado
                   corresponde a una recomendación académica por área.
                 </p>
@@ -201,19 +162,19 @@ function ResultPage() {
               </div>
 
               <h3 className="mt-5 text-xl font-extrabold text-slate-950">
-                {result.model_1?.name ?? 'Modelo 1'}
+                {result.model_1.name}
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Recomendación principal:{' '}
-                {result.model_1?.area ?? result.recommended_area}.
+                Recomendación principal: {result.model_1.area}.
               </p>
 
-              <div className="mt-5 h-3 overflow-hidden rounded-full bg-blue-100">
-                <div
-                  className={`h-full rounded-full bg-blue-600 ${model1WidthClass}`}
-                ></div>
-              </div>
+              <progress
+                value={Math.round(result.model_1.affinity)}
+                max={100}
+                aria-label={`Afinidad de ${result.model_1.name}`}
+                className="mt-5 h-3 w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-blue-100 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-blue-600"
+              />
             </div>
 
             <div className="rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-xl shadow-slate-200/70">
@@ -228,23 +189,23 @@ function ResultPage() {
               </div>
 
               <h3 className="mt-5 text-xl font-extrabold text-slate-950">
-                {result.model_2?.name ?? 'Modelo 2'}
+                {result.model_2.name}
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Recomendación principal:{' '}
-                {result.model_2?.area ?? result.recommended_area}.
+                Recomendación principal: {result.model_2.area}.
               </p>
 
-              <div className="mt-5 h-3 overflow-hidden rounded-full bg-emerald-100">
-                <div
-                  className={`h-full rounded-full bg-emerald-500 ${model2WidthClass}`}
-                ></div>
-              </div>
+              <progress
+                value={Math.round(result.model_2.affinity)}
+                max={100}
+                aria-label={`Afinidad de ${result.model_2.name}`}
+                className="mt-5 h-3 w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-emerald-100 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-emerald-500"
+              />
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               to="/cuestionario"
               className="inline-flex items-center justify-center gap-3 rounded-2xl border border-blue-200 bg-white px-6 py-4 font-bold text-blue-700 shadow-sm transition hover:bg-blue-50"
@@ -253,14 +214,15 @@ function ResultPage() {
               Realizar otra evaluación
             </Link>
 
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
+            <a
+              href="https://forms.gle/j4mzp4Vrp2bgzpdX7"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-3 rounded-2xl border border-emerald-200 bg-white px-6 py-4 font-bold text-emerald-700 shadow-sm transition hover:bg-emerald-50"
             >
-              <Download size={21} />
-              Guardar resultado
-            </button>
+              <Sparkles size={21} />
+              Responder encuesta breve
+            </a>
           </div>
         </div>
 
@@ -283,33 +245,29 @@ function ResultPage() {
 
             <div className="mt-6 space-y-5">
               {secondaryAreas.length > 0 ? (
-                secondaryAreas.map((area) => {
-                  const areaAffinityText = formatPercentage(area.affinity)
-                  const areaWidthClass = getWidthClass(area.affinity)
-
-                  return (
-                    <div key={area.area}>
-                      <div className="mb-2 flex justify-between text-sm">
-                        <span className="font-semibold text-slate-700">
-                          {area.area}
-                        </span>
-                        <span className="font-bold text-slate-900">
-                          {areaAffinityText}
-                        </span>
-                      </div>
-
-                      <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-                        <div
-                          className={`h-full rounded-full bg-blue-500 ${areaWidthClass}`}
-                        ></div>
-                      </div>
+                secondaryAreas.map((area) => (
+                  <div key={area.area}>
+                    <div className="mb-2 flex justify-between text-sm">
+                      <span className="font-semibold text-slate-700">
+                        {area.area}
+                      </span>
+                      <span className="font-bold text-slate-900">
+                        {Math.round(area.affinity)}%
+                      </span>
                     </div>
-                  )
-                })
+
+                    <progress
+                      value={Math.round(area.affinity)}
+                      max={100}
+                      aria-label={`Afinidad secundaria de ${area.area}`}
+                      className="h-3 w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-blue-500"
+                    />
+                  </div>
+                ))
               ) : (
                 <p className="text-sm leading-6 text-slate-600">
-                  No se identificaron áreas complementarias con afinidad
-                  suficiente según las reglas definidas para el prototipo.
+                  No se identificaron áreas secundarias con una afinidad
+                  suficientemente cercana al resultado principal.
                 </p>
               )}
             </div>
@@ -323,8 +281,9 @@ function ResultPage() {
                   Interpretación sugerida
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-emerald-800">
-                  {result.interpretation ??
-                    'La recomendación debe entenderse como apoyo para iniciar una conversación de orientación. El estudiante puede revisar el resultado junto con docentes, tutores u orientadores.'}
+                  La recomendación debe entenderse como apoyo para iniciar una
+                  conversación de orientación. El estudiante puede revisar el
+                  resultado junto con docentes, tutores u orientadores.
                 </p>
               </div>
             </div>
@@ -353,8 +312,8 @@ function ResultPage() {
                 <span className="font-bold">
                   #{result.recommendation_result_id}
                 </span>
-                . Los valores mostrados fueron generados por los modelos de
-                Machine Learning integrados al backend del prototipo.
+                . Los valores mostrados corresponden al resultado generado por
+                los modelos integrados a partir de las respuestas registradas.
               </p>
             </div>
           </div>

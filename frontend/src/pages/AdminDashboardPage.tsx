@@ -13,8 +13,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminSidebar from '../components/AdminSidebar'
 import {
+  getAdminModelAnalytics,
   getAdminRecords,
   getAdminStats,
+  type AdminModelAnalyticsResponse,
   type AdminRecord,
   type AdminStatsResponse,
 } from '../services/api'
@@ -34,22 +36,65 @@ const getPercentageWidthClass = (percentage: number) => {
   return 'w-[5%]'
 }
 
+const formatModelName = (name?: string, fallback = 'Modelo') => {
+  if (!name) {
+    return fallback
+  }
+
+  if (name === 'naive_bayes') {
+    return 'Naive Bayes'
+  }
+
+  if (name === 'svm') {
+    return 'SVM'
+  }
+
+  if (name === 'xgboost') {
+    return 'XGBoost'
+  }
+
+  if (name === 'random_forest') {
+    return 'Random Forest'
+  }
+
+  if (name === 'mlp') {
+    return 'MLP'
+  }
+
+  return name
+}
+
+const formatModelMetric = (value?: number | null) => {
+  if (value === undefined || value === null || Number.isNaN(value)) {
+    return 'N/A'
+  }
+
+  const normalizedValue = value <= 1 ? value * 100 : value
+
+  return `${Number(normalizedValue.toFixed(2))}%`
+}
+
 function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStatsResponse | null>(null)
   const [records, setRecords] = useState<AdminRecord[]>([])
+  const [analytics, setAnalytics] =
+    useState<AdminModelAnalyticsResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [statsResponse, recordsResponse] = await Promise.all([
-          getAdminStats(),
-          getAdminRecords(),
-        ])
+        const [statsResponse, recordsResponse, analyticsResponse] =
+          await Promise.all([
+            getAdminStats(),
+            getAdminRecords(),
+            getAdminModelAnalytics(),
+          ])
 
         setStats(statsResponse)
         setRecords(recordsResponse.records)
+        setAnalytics(analyticsResponse)
       } catch (error) {
         setErrorMessage(
           'No se pudo cargar la información del panel. Verifica que el backend esté activo.',
@@ -67,12 +112,15 @@ function AdminDashboardPage() {
       return []
     }
 
-    const groupedAreas = records.reduce<Record<string, number>>((accumulator, record) => {
-      accumulator[record.recommended_area] =
-        (accumulator[record.recommended_area] || 0) + 1
+    const groupedAreas = records.reduce<Record<string, number>>(
+      (accumulator, record) => {
+        accumulator[record.recommended_area] =
+          (accumulator[record.recommended_area] || 0) + 1
 
-      return accumulator
-    }, {})
+        return accumulator
+      },
+      {},
+    )
 
     return Object.entries(groupedAreas)
       .map(([area, total]) => ({
@@ -86,6 +134,12 @@ function AdminDashboardPage() {
   const totalRecords = stats?.total_records ?? 0
   const mostRecommendedArea = stats?.most_recommended_area ?? 'Sin registros'
   const averageAffinity = stats?.average_affinity ?? 0
+
+  const model1Name = formatModelName(analytics?.model_1?.name, 'Modelo 1')
+  const model2Name = formatModelName(analytics?.model_2?.name, 'Modelo 2')
+
+  const model1Score = formatModelMetric(analytics?.model_1?.f1_macro)
+  const model2Score = formatModelMetric(analytics?.model_2?.f1_macro)
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
@@ -118,9 +172,7 @@ function AdminDashboardPage() {
                     Estado del prototipo
                   </p>
                   <p className="text-sm text-emerald-700">
-                    {isLoading
-                      ? 'Cargando información'
-                      : 'Conectado al backend'}
+                    {isLoading ? 'Cargando información' : 'Conectado'}
                   </p>
                 </div>
               </div>
@@ -179,7 +231,7 @@ function AdminDashboardPage() {
                 Afinidad promedio
               </p>
               <h3 className="mt-2 text-4xl font-extrabold text-blue-600">
-                {isLoading ? '...' : `${averageAffinity}%`}
+                {isLoading ? '...' : `${Math.round(averageAffinity)}%`}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
                 Promedio calculado con registros reales
@@ -197,9 +249,7 @@ function AdminDashboardPage() {
               <h3 className="mt-2 text-4xl font-extrabold text-emerald-600">
                 CSV
               </h3>
-              <p className="mt-2 text-sm text-slate-500">
-                Registros no identificables
-              </p>
+              <p className="mt-2 text-sm text-slate-500">Registros</p>
             </div>
           </div>
 
@@ -271,39 +321,45 @@ function AdminDashboardPage() {
 
                   <div>
                     <p className="text-sm font-semibold text-slate-500">
-                      Comparación inicial
+                      Evaluación de modelos
                     </p>
                     <h3 className="text-xl font-extrabold text-slate-950">
-                      Analítica de modelos
+                      Análisis de modelos
                     </h3>
                   </div>
                 </div>
 
                 <div className="mt-6 space-y-4">
                   <div className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="font-bold text-slate-950">Modelo 1</p>
+                        <p className="font-bold text-slate-950">
+                          Modelo 1 · {model1Name}
+                        </p>
                         <p className="mt-1 text-sm text-slate-600">
-                          Resultado referencial
+                          F1-score macro
                         </p>
                       </div>
+
                       <span className="text-2xl font-extrabold text-blue-700">
-                        84%
+                        {isLoading ? '...' : model1Score}
                       </span>
                     </div>
                   </div>
 
                   <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="font-bold text-slate-950">Modelo 2</p>
+                        <p className="font-bold text-slate-950">
+                          Modelo 2 · {model2Name}
+                        </p>
                         <p className="mt-1 text-sm text-slate-600">
-                          Resultado referencial
+                          F1-score macro
                         </p>
                       </div>
+
                       <span className="text-2xl font-extrabold text-emerald-700">
-                        79%
+                        {isLoading ? '...' : model2Score}
                       </span>
                     </div>
                   </div>
@@ -314,7 +370,7 @@ function AdminDashboardPage() {
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
                 >
                   <BrainCircuit size={18} />
-                  Revisar analítica
+                  Revisar comparación
                 </Link>
               </div>
 
@@ -327,8 +383,7 @@ function AdminDashboardPage() {
                     </h3>
                     <p className="mt-3 text-sm leading-6 text-emerald-800">
                       La información mostrada permite revisar registros y
-                      estadísticas generales del prototipo sin utilizar datos
-                      directamente identificables de los estudiantes.
+                      estadísticas generales del prototipo.
                     </p>
                   </div>
                 </div>

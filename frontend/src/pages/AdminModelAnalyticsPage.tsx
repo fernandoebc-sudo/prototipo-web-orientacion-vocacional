@@ -11,6 +11,8 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  ZoomIn,
+  X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -89,6 +91,10 @@ function AdminModelAnalyticsPage() {
     useState<AdminModelAnalyticsResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+  const [selectedMatrix, setSelectedMatrix] = useState<{
+    src: string
+    title: string
+  } | null>(null)
 
   useEffect(() => {
     async function loadAnalytics() {
@@ -101,7 +107,7 @@ function AdminModelAnalyticsPage() {
         setAnalytics(response)
       } catch {
         setErrorMessage(
-          'No se pudo cargar la analítica de modelos. Verifica que el backend esté activo y que la sesión administrativa siga vigente.',
+          'No se pudo cargar la evaluación de modelos. Verifica que el backend esté activo y que la sesión administrativa siga vigente.',
         )
       } finally {
         setIsLoading(false)
@@ -137,12 +143,13 @@ function AdminModelAnalyticsPage() {
               </span>
 
               <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950">
-                Analítica comparativa de modelos
+                Evaluación comparativa de modelos
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                 Vista para revisar el comportamiento de los modelos integrados
-                mediante métricas de evaluación y registros almacenados.
+                mediante métricas de evaluación, matrices de confusión y
+                registros almacenados.
               </p>
             </div>
 
@@ -159,9 +166,12 @@ function AdminModelAnalyticsPage() {
           {isLoading && (
             <div className="flex min-h-[420px] items-center justify-center rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
               <div className="text-center">
-                <Loader2 className="mx-auto animate-spin text-blue-600" size={42} />
+                <Loader2
+                  className="mx-auto animate-spin text-blue-600"
+                  size={42}
+                />
                 <h3 className="mt-5 text-xl font-extrabold text-slate-950">
-                  Cargando analítica de modelos
+                  Cargando evaluación de modelos
                 </h3>
                 <p className="mt-2 text-sm text-slate-500">
                   Consultando métricas y registros administrativos.
@@ -312,7 +322,10 @@ function AdminModelAnalyticsPage() {
                   <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
                       <div className="flex items-start gap-3">
-                        <BrainCircuit className="mt-1 text-blue-600" size={22} />
+                        <BrainCircuit
+                          className="mt-1 text-blue-600"
+                          size={22}
+                        />
                         <div>
                           <h4 className="font-extrabold text-blue-800">
                             Interpretación del rendimiento
@@ -369,7 +382,9 @@ function AdminModelAnalyticsPage() {
                           key={item.area}
                           className="rounded-3xl border border-slate-200 bg-slate-50 p-4"
                         >
-                          <p className="font-bold text-slate-950">{item.area}</p>
+                          <p className="font-bold text-slate-950">
+                            {item.area}
+                          </p>
 
                           <div className="mt-3 grid grid-cols-2 gap-3">
                             <div
@@ -404,52 +419,177 @@ function AdminModelAnalyticsPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <Grid3X3 className="text-blue-600" size={26} />
-                      <h3 className="font-extrabold text-slate-950">
-                        Matriz de confusión
-                      </h3>
-                    </div>
-
-                    <p className="mt-3 text-sm leading-6 text-slate-600">
-                      Esta sección queda reservada para mostrar los aciertos y
-                      errores por clase cuando se integre la matriz de confusión
-                      generada durante el entrenamiento final.
-                    </p>
-
-                    <div className="mt-5 grid grid-cols-4 gap-2 text-center text-xs">
-                      {Array.from({ length: 16 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className={`rounded-xl p-3 font-bold ${
-                            index % 5 === 0
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-slate-100 text-slate-500'
-                          }`}
-                        >
-                          {index % 5 === 0 ? '✓' : '-'}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-6">
                     <div className="flex items-start gap-3">
                       <BarChart3 className="mt-1 text-blue-600" size={22} />
                       <p className="text-sm leading-6 text-slate-700">
                         Los valores mostrados provienen del endpoint
-                        administrativo de analítica de modelos y de los
+                        administrativo de evaluación de modelos y de los
                         registros almacenados por el prototipo.
                       </p>
                     </div>
                   </div>
                 </aside>
               </div>
+
+              <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <Grid3X3 className="text-blue-600" size={28} />
+                      <h3 className="text-2xl font-extrabold text-slate-950">
+                        Matrices de confusión
+                      </h3>
+                    </div>
+
+                    <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+                      Las matrices de confusión permiten observar los aciertos y
+                      errores de clasificación obtenidos por los modelos
+                      integrados al prototipo para las áreas académicas
+                      evaluadas.
+                    </p>
+                  </div>
+
+                  <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
+                    Evaluación por clases
+                  </span>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  <div className="rounded-3xl border border-blue-100 bg-slate-50 p-4">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-lg font-extrabold text-slate-950">
+                          Modelo 1: Naive Bayes
+                        </h4>
+                        <p className="text-xs font-semibold text-slate-500">
+                          Matriz de confusión del modelo principal
+                        </p>
+                      </div>
+
+                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                        Modelo 1
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedMatrix({
+                          src: '/confusion_matrix_naive_bayes.png',
+                          title:
+                            'Matriz de confusión del Modelo 1: Naive Bayes',
+                        })
+                      }
+                      className="group relative w-full overflow-hidden rounded-2xl border border-slate-100 bg-white"
+                    >
+                      <img
+                        src="/confusion_matrix_naive_bayes.png"
+                        alt="Matriz de confusión del Modelo 1 Naive Bayes"
+                        className="w-full object-contain transition duration-300 group-hover:scale-[1.02]"
+                      />
+
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-950/0 opacity-0 transition group-hover:bg-slate-950/25 group-hover:opacity-100">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-lg">
+                          <ZoomIn size={16} />
+                          Ampliar
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="rounded-3xl border border-emerald-100 bg-slate-50 p-4">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-lg font-extrabold text-slate-950">
+                          Modelo 2: SVM
+                        </h4>
+                        <p className="text-xs font-semibold text-slate-500">
+                          Matriz de confusión del modelo comparativo
+                        </p>
+                      </div>
+
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                        Modelo 2
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedMatrix({
+                          src: '/confusion_matrix_svm.png',
+                          title: 'Matriz de confusión del Modelo 2: SVM',
+                        })
+                      }
+                      className="group relative w-full overflow-hidden rounded-2xl border border-slate-100 bg-white"
+                    >
+                      <img
+                        src="/confusion_matrix_svm.png"
+                        alt="Matriz de confusión del Modelo 2 SVM"
+                        className="w-full object-contain transition duration-300 group-hover:scale-[1.02]"
+                      />
+
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-950/0 opacity-0 transition group-hover:bg-slate-950/25 group-hover:opacity-100">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-lg">
+                          <ZoomIn size={16} />
+                          Ampliar
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <p className="mt-5 text-xs leading-5 text-slate-500">
+                  La diagonal principal representa las clasificaciones
+                  correctas, mientras que los valores fuera de la diagonal
+                  muestran confusiones entre áreas académicas.
+                </p>
+              </section>
             </>
           )}
         </div>
       </section>
+
+      {selectedMatrix && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedMatrix(null)}
+        >
+          <div
+            className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+                  Evaluación por clases
+                </p>
+                <h3 className="mt-1 text-lg font-extrabold text-slate-950">
+                  {selectedMatrix.title}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedMatrix(null)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+                aria-label="Cerrar imagen ampliada"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="max-h-[78vh] overflow-auto bg-slate-50 p-4">
+              <img
+                src={selectedMatrix.src}
+                alt={selectedMatrix.title}
+                className="mx-auto max-h-none w-full max-w-5xl rounded-xl bg-white object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

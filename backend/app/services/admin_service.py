@@ -44,6 +44,8 @@ def get_database_records(db: Session):
                 "recommended_area": result.recommended_area,
                 "affinity": result.affinity,
                 "created_at": result.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "model_1_result": result.model_1_result,
+                "model_2_result": result.model_2_result,
             }
             for result in results
         ],
@@ -103,8 +105,8 @@ def _normalize_model_name(value: str) -> str:
 
 def _read_model_metadata() -> dict[str, str]:
     default_metadata = {
-        "model_1_name": "svm",
-        "model_2_name": "xgboost",
+        "model_1_name": "naive_bayes",
+        "model_2_name": "svm",
     }
 
     if not METADATA_PATH.exists():
@@ -168,8 +170,6 @@ def _get_row_model_name(row: dict[str, Any]) -> str:
         if key in row and row[key]:
             return str(row[key])
 
-    # Si el CSV tiene otra columna para el nombre del modelo,
-    # se toma la primera columna no numérica como respaldo.
     for value in row.values():
         text_value = str(value).strip()
         if text_value and not text_value.replace(".", "", 1).isdigit():
@@ -185,10 +185,35 @@ def _find_model_metrics(
     normalized_target = _normalize_model_name(model_name)
 
     aliases = {
-        "svm": ["svm", "svc", "support_vector_machine", "support_vector"],
-        "xgboost": ["xgboost", "xgb", "xgboost_classifier"],
-        "random_forest": ["random_forest", "rf", "randomforest"],
-        "mlp": ["mlp", "neural_network", "red_neuronal"],
+        "naive_bayes": [
+            "naive_bayes",
+            "nb",
+            "gaussian_nb",
+            "gaussiannb",
+            "multinomial_nb",
+            "bernoulli_nb",
+        ],
+        "svm": [
+            "svm",
+            "svc",
+            "support_vector_machine",
+            "support_vector",
+        ],
+        "xgboost": [
+            "xgboost",
+            "xgb",
+            "xgboost_classifier",
+        ],
+        "random_forest": [
+            "random_forest",
+            "rf",
+            "randomforest",
+        ],
+        "mlp": [
+            "mlp",
+            "neural_network",
+            "red_neuronal",
+        ],
     }
 
     target_aliases = aliases.get(normalized_target, [normalized_target])
@@ -423,7 +448,7 @@ def get_model_analytics_data(db: Session):
                 "metric": "F1-score macro",
                 "model_1": model_1["f1_macro"],
                 "model_2": model_2["f1_macro"],
-                "description": "Equilibrio promedio entre precision y recall.",
+                "description": "Equilibrio promedio entre precisión y recall.",
             },
         ],
     }

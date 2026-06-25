@@ -321,9 +321,7 @@ function AdminStatsPage() {
                     </h3>
                     <p className="mt-3 text-sm leading-6 text-slate-700">
                       Esta vista permite revisar tendencias generales del
-                      prototipo a partir de los resultados guardados. La
-                      información presentada no incluye datos directamente
-                      identificables de los estudiantes.
+                      prototipo a partir de los resultados guardados.
                     </p>
                   </div>
                 </div>

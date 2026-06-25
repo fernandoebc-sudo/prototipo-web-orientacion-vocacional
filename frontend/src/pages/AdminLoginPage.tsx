@@ -91,7 +91,7 @@ function AdminLoginPage() {
 
           <p className="mt-3 leading-7 text-slate-600">
             El acceso administrativo permite revisar registros, estadísticas,
-            analítica comparativa de modelos y opciones de exportación.
+            análisis comparativo de modelos y opciones de exportación.
           </p>
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
@@ -110,7 +110,7 @@ function AdminLoginPage() {
                   type="text"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  placeholder="admin"
+                  placeholder="Ingresa tu usuario"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
                 />
               </div>
@@ -173,7 +173,7 @@ function AdminLoginPage() {
                 </h3>
                 <p className="mt-2 leading-7 text-slate-300">
                   El administrador podrá revisar información agregada del
-                  prototipo sin exponer datos directamente identificables.
+                  prototipo.
                 </p>
               </div>
             </div>
@@ -200,7 +200,7 @@ function AdminLoginPage() {
             <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
               <BrainCircuit className="text-blue-300" size={26} />
               <h4 className="mt-3 font-bold text-white">
-                Analítica de modelos
+                Análisis de modelos
               </h4>
               <p className="mt-2 text-sm leading-6 text-slate-300">
                 Comparación entre Modelo 1 y Modelo 2 mediante métricas y

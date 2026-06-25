@@ -13,6 +13,23 @@ import { Link } from 'react-router-dom'
 import AdminSidebar from '../components/AdminSidebar'
 import { getAdminRecords, type AdminRecord } from '../services/api'
 
+const escapeCsvValue = (value: string | number | null | undefined) => {
+  const text = value === undefined || value === null ? '' : String(value)
+
+  return `"${text.replace(/"/g, '""')}"`
+}
+
+const buildCsv = (headers: string[], rows: Array<Array<string | number>>) => {
+  const separator = ';'
+
+  const content = [
+    headers.map(escapeCsvValue).join(separator),
+    ...rows.map((row) => row.map(escapeCsvValue).join(separator)),
+  ].join('\n')
+
+  return `\uFEFF${content}`
+}
+
 function AdminRecordsPage() {
   const [records, setRecords] = useState<AdminRecord[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -44,8 +61,10 @@ function AdminRecordsPage() {
     }
 
     return records.filter((record) => {
+      const formattedId = `REG-${String(record.id).padStart(3, '0')}`
+
       return (
-        `REG-${record.id}`.toLowerCase().includes(normalizedSearch) ||
+        formattedId.toLowerCase().includes(normalizedSearch) ||
         record.recommended_area.toLowerCase().includes(normalizedSearch) ||
         record.created_at.toLowerCase().includes(normalizedSearch)
       )
@@ -62,25 +81,42 @@ function AdminRecordsPage() {
 
   const latestRecord = records[0]
 
-  const exportRecords = () => {
-    const csvHeader = 'id,area_recomendada,afinidad,fecha\n'
-    const csvRows = records
-      .map(
-        (record) =>
-          `${record.id},"${record.recommended_area}",${record.affinity},"${record.created_at}"`,
-      )
-      .join('\n')
+  const downloadCsv = (fileName: string, csvContent: string) => {
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    })
 
-    const csvContent = `${csvHeader}${csvRows}`
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
 
     link.href = url
-    link.download = 'registros-vocai.csv'
+    link.download = fileName
+    document.body.appendChild(link)
     link.click()
+    document.body.removeChild(link)
 
     URL.revokeObjectURL(url)
+  }
+
+  const exportRecords = () => {
+    const csvContent = buildCsv(
+      [
+        'Registro',
+        'Área recomendada',
+        'Afinidad (%)',
+        'Fecha de registro',
+        'Estado',
+      ],
+      filteredRecords.map((record) => [
+        `REG-${String(record.id).padStart(3, '0')}`,
+        record.recommended_area,
+        Math.round(record.affinity),
+        record.created_at,
+        'Almacenado',
+      ]),
+    )
+
+    downloadCsv('vocai-registros-almacenados.csv', csvContent)
   }
 
   return (
@@ -158,7 +194,9 @@ function AdminRecordsPage() {
                 Último registro
               </p>
               <h3 className="mt-2 text-4xl font-extrabold text-amber-600">
-                {latestRecord ? `#${latestRecord.id}` : '—'}
+                {latestRecord
+                  ? `REG-${String(latestRecord.id).padStart(3, '0')}`
+                  : '—'}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
                 Registro más reciente procesado
@@ -176,8 +214,8 @@ function AdminRecordsPage() {
                   Resultados almacenados
                 </h3>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  La tabla muestra información no identificable generada por el
-                  prototipo y almacenada en PostgreSQL.
+                  La tabla muestra información generada por el prototipo y
+                  almacenada en PostgreSQL.
                 </p>
               </div>
 
@@ -193,7 +231,8 @@ function AdminRecordsPage() {
                 <button
                   type="button"
                   onClick={exportRecords}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
+                  disabled={filteredRecords.length === 0 || isLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Download size={18} />
                   Exportar
@@ -236,7 +275,9 @@ function AdminRecordsPage() {
                       <th className="px-4 py-4 font-bold">Registro</th>
                       <th className="px-4 py-4 font-bold">Área recomendada</th>
                       <th className="px-4 py-4 font-bold">Afinidad</th>
-                      <th className="px-4 py-4 font-bold">Fecha de registro</th>
+                      <th className="px-4 py-4 font-bold">
+                        Fecha de registro
+                      </th>
                       <th className="px-4 py-4 font-bold">Estado</th>
                     </tr>
                   </thead>
@@ -251,7 +292,7 @@ function AdminRecordsPage() {
                           {record.recommended_area}
                         </td>
                         <td className="px-4 py-4 font-extrabold text-blue-700">
-                          {record.affinity}%
+                          {Math.round(record.affinity)}%
                         </td>
                         <td className="px-4 py-4 text-slate-600">
                           {record.created_at}
@@ -281,7 +322,7 @@ function AdminRecordsPage() {
                 <p className="text-sm leading-6 text-emerald-800">
                   Los registros mostrados provienen de la base de datos del
                   prototipo y no incluyen nombres, cédulas, correos ni otros
-                  datos directamente identificables.
+                  datos personales.
                 </p>
               </div>
             </div>

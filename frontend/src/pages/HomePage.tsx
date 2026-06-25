@@ -28,7 +28,7 @@ function HomePage() {
                 Voc<span className="text-blue-600">AI</span>
               </h1>
               <p className="text-sm text-slate-500">
-                Orientación vocacional inteligente
+                Conectando tu potencial con el mañana
               </p>
             </div>
           </div>
@@ -65,7 +65,7 @@ function HomePage() {
 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
             VocAI permite que el estudiante responda un cuestionario
-            académico-vocacional y reciba una recomendación por área,
+            académico y reciba una recomendación por área,
             acompañada de un nivel de afinidad y una explicación breve.
           </p>
 
@@ -112,7 +112,7 @@ function HomePage() {
             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
               <BarChart3 className="mx-auto text-emerald-600" size={26} />
               <p className="mt-3 text-sm font-semibold text-slate-700">
-                Analítica
+                Análisis
               </p>
             </div>
           </div>
@@ -130,16 +130,16 @@ function HomePage() {
 
           <div className="relative z-20 -mt-10 w-full max-w-[500px] rounded-3xl border border-blue-100 bg-white/90 p-5 shadow-xl shadow-slate-200/70 backdrop-blur">
             <p className="text-sm font-semibold text-blue-700">
-              Cuestionario académico-vocacional
+              Cuestionario académico vocacional
             </p>
 
             <h3 className="mt-2 text-2xl font-bold text-slate-950">
-              Explora áreas según tu perfil
+              Explora áreas de acuerdo a tu perfil
             </h3>
 
             <p className="mt-3 text-sm leading-6 text-slate-600">
               El sistema organiza las respuestas del estudiante para apoyar la
-              recomendación académica por áreas.
+              recomendación académica.
             </p>
           </div>
         </div>

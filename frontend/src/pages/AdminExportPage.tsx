@@ -16,11 +16,22 @@ import { Link } from 'react-router-dom'
 import AdminSidebar from '../components/AdminSidebar'
 import { getAdminRecords, type AdminRecord } from '../services/api'
 
+type ModelPrediction = {
+  name?: string
+  area?: string
+  affinity?: number
+}
+
+type ExportRecord = AdminRecord & {
+  model_1_result?: ModelPrediction | string | null
+  model_2_result?: ModelPrediction | string | null
+}
+
 const exportOptions = [
   {
     title: 'Registros de cuestionarios',
     description:
-      'Información general no identificable de los resultados procesados por el prototipo.',
+      'Información de los resultados procesados por el prototipo.',
     format: 'CSV',
     icon: ClipboardList,
     color: 'bg-blue-50 text-blue-600',
@@ -29,7 +40,7 @@ const exportOptions = [
   {
     title: 'Resultados por modelos',
     description:
-      'Recomendaciones generadas por Modelo 1 y Modelo 2 en la versión referencial del prototipo.',
+      'Recomendaciones generadas por Modelo 1 y Modelo 2 del prototipo.',
     format: 'CSV',
     icon: BrainCircuit,
     color: 'bg-emerald-50 text-emerald-600',
@@ -46,8 +57,79 @@ const exportOptions = [
   },
 ]
 
+const parseModelResult = (
+  value: ModelPrediction | string | null | undefined,
+): ModelPrediction | null => {
+  if (!value) {
+    return null
+  }
+
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as ModelPrediction
+    } catch (error) {
+      return null
+    }
+  }
+
+  return value
+}
+
+const formatModelName = (name?: string) => {
+  if (!name) {
+    return ''
+  }
+
+  if (name === 'naive_bayes') {
+    return 'Naive Bayes'
+  }
+
+  if (name === 'svm') {
+    return 'SVM'
+  }
+
+  if (name === 'xgboost') {
+    return 'XGBoost'
+  }
+
+  if (name === 'random_forest') {
+    return 'Random Forest'
+  }
+
+  if (name === 'mlp') {
+    return 'MLP'
+  }
+
+  return name
+}
+
+const formatNumber = (value?: number | null) => {
+  if (value === undefined || value === null || Number.isNaN(value)) {
+    return ''
+  }
+
+  return String(Math.round(value))
+}
+
+const escapeCsvValue = (value: string | number | null | undefined) => {
+  const text = value === undefined || value === null ? '' : String(value)
+
+  return `"${text.replace(/"/g, '""')}"`
+}
+
+const buildCsv = (headers: string[], rows: Array<Array<string | number>>) => {
+  const separator = ';'
+
+  const content = [
+    headers.map(escapeCsvValue).join(separator),
+    ...rows.map((row) => row.map(escapeCsvValue).join(separator)),
+  ].join('\n')
+
+  return `\uFEFF${content}`
+}
+
 function AdminExportPage() {
-  const [records, setRecords] = useState<AdminRecord[]>([])
+  const [records, setRecords] = useState<ExportRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -55,7 +137,7 @@ function AdminExportPage() {
     async function loadRecords() {
       try {
         const response = await getAdminRecords()
-        setRecords(response.records)
+        setRecords(response.records as ExportRecord[])
       } catch (error) {
         setErrorMessage(
           'No se pudieron cargar los registros. Verifica que el backend esté activo.',
@@ -89,50 +171,90 @@ function AdminExportPage() {
       : 'Sin registros'
 
   const downloadCsv = (fileName: string, csvContent: string) => {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    })
+
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
 
     link.href = url
     link.download = fileName
+    document.body.appendChild(link)
     link.click()
+    document.body.removeChild(link)
 
     URL.revokeObjectURL(url)
   }
 
   const exportRecords = () => {
-    const csvHeader = 'id,area_recomendada,afinidad,fecha_registro\n'
-    const csvRows = records
-      .map(
-        (record) =>
-          `${record.id},"${record.recommended_area}",${record.affinity},"${record.created_at}"`,
-      )
-      .join('\n')
+    const csvContent = buildCsv(
+      [
+        'Registro',
+        'Área recomendada',
+        'Afinidad (%)',
+        'Fecha de registro',
+        'Estado',
+      ],
+      records.map((record) => [
+        `REG-${String(record.id).padStart(3, '0')}`,
+        record.recommended_area,
+        Math.round(record.affinity),
+        record.created_at,
+        'Almacenado',
+      ]),
+    )
 
-    downloadCsv('vocai-registros.csv', `${csvHeader}${csvRows}`)
+    downloadCsv('vocai-registros.csv', csvContent)
   }
 
   const exportModelResults = () => {
-    const csvHeader =
-      'id,modelo_1_area,modelo_1_afinidad,modelo_2_area,modelo_2_afinidad,fecha_registro\n'
+    const csvContent = buildCsv(
+      [
+        'Registro',
+        'Modelo 1',
+        'Área Modelo 1',
+        'Afinidad Modelo 1 (%)',
+        'Modelo 2',
+        'Área Modelo 2',
+        'Afinidad Modelo 2 (%)',
+        'Área final recomendada',
+        'Afinidad final (%)',
+        'Fecha de registro',
+      ],
+      records.map((record) => {
+        const model1 = parseModelResult(record.model_1_result)
+        const model2 = parseModelResult(record.model_2_result)
 
-    const csvRows = records
-      .map(
-        (record) =>
-          `${record.id},"${record.recommended_area}",${record.affinity},"${record.recommended_area}",79,"${record.created_at}"`,
-      )
-      .join('\n')
+        return [
+          `REG-${String(record.id).padStart(3, '0')}`,
+          formatModelName(model1?.name),
+          model1?.area ?? '',
+          formatNumber(model1?.affinity),
+          formatModelName(model2?.name),
+          model2?.area ?? '',
+          formatNumber(model2?.affinity),
+          record.recommended_area,
+          Math.round(record.affinity),
+          record.created_at,
+        ]
+      }),
+    )
 
-    downloadCsv('vocai-resultados-modelos.csv', `${csvHeader}${csvRows}`)
+    downloadCsv('vocai-resultados-modelos.csv', csvContent)
   }
 
   const exportSummary = () => {
-    const csvContent = [
-      'indicador,valor',
-      `total_registros,${records.length}`,
-      `area_mas_recomendada,"${mostRecommendedArea}"`,
-      `afinidad_promedio,${averageAffinity}`,
-    ].join('\n')
+    const csvContent = buildCsv(
+      ['Indicador', 'Valor'],
+      [
+        ['Total de registros', records.length],
+        ['Área más recomendada', mostRecommendedArea],
+        ['Afinidad promedio (%)', averageAffinity],
+        ['Formato de exportación', 'CSV'],
+        ['Tratamiento de datos', 'Sin datos personales identificables'],
+      ],
+    )
 
     downloadCsv('vocai-resumen-estadistico.csv', csvContent)
   }
@@ -173,8 +295,8 @@ function AdminExportPage() {
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Descarga de registros y resultados no identificables generados
-                por el prototipo para análisis posterior.
+                Descarga de registros y resultados generados por el prototipo
+                para análisis posterior.
               </p>
             </div>
 
@@ -219,9 +341,11 @@ function AdminExportPage() {
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                       <Database size={24} />
                     </div>
+
                     <p className="mt-4 text-sm font-semibold text-slate-500">
                       Registros
                     </p>
+
                     <p className="mt-2 text-3xl font-extrabold text-slate-950">
                       {isLoading ? '...' : records.length}
                     </p>
@@ -231,9 +355,11 @@ function AdminExportPage() {
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
                       <FileText size={24} />
                     </div>
+
                     <p className="mt-4 text-sm font-semibold text-slate-500">
                       Formato
                     </p>
+
                     <p className="mt-2 text-3xl font-extrabold text-blue-600">
                       CSV
                     </p>
@@ -243,9 +369,11 @@ function AdminExportPage() {
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
                       <CheckCircle2 size={24} />
                     </div>
+
                     <p className="mt-4 text-sm font-semibold text-slate-500">
                       Estado
                     </p>
+
                     <p className="mt-2 text-3xl font-extrabold text-emerald-600">
                       {records.length > 0 ? 'Listo' : '—'}
                     </p>
@@ -265,8 +393,7 @@ function AdminExportPage() {
                 <p className="mt-3 text-sm leading-6 text-emerald-800">
                   La exportación conserva el tratamiento no identificable de la
                   información. El prototipo no incluye nombres, cédulas,
-                  teléfonos, correos ni datos directamente identificables del
-                  estudiante.
+                  teléfonos, correos ni datos personales del estudiante.
                 </p>
 
                 <div className="mt-6 rounded-3xl bg-white/80 p-5 text-sm leading-6 text-emerald-800">
@@ -323,10 +450,12 @@ function AdminExportPage() {
               <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-6">
                 <div className="flex items-start gap-3">
                   <Archive className="mt-1 text-blue-600" size={24} />
+
                   <div>
                     <h4 className="font-extrabold text-blue-800">
                       Exportación implementada
                     </h4>
+
                     <p className="mt-3 text-sm leading-6 text-slate-700">
                       Los archivos CSV se generan desde los registros obtenidos
                       desde el backend y almacenados previamente en PostgreSQL.
@@ -338,15 +467,16 @@ function AdminExportPage() {
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-1 text-emerald-600" size={24} />
+
                   <div>
                     <h4 className="font-extrabold text-slate-950">
                       Alcance de la descarga
                     </h4>
+
                     <p className="mt-3 text-sm leading-6 text-slate-600">
                       Los archivos exportados están orientados al análisis del
                       prototipo, comparación de resultados y revisión técnica,
-                      sin exponer información directamente identificable de los
-                      estudiantes.
+                      sin exponer información de los estudiantes.
                     </p>
                   </div>
                 </div>

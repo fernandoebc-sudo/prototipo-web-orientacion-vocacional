@@ -1,5 +1,6 @@
+from typing import Any, List
+
 from pydantic import BaseModel
-from typing import List
 
 
 class AdminRecord(BaseModel):
@@ -7,6 +8,8 @@ class AdminRecord(BaseModel):
     recommended_area: str
     affinity: int
     created_at: str
+    model_1_result: Any | None = None
+    model_2_result: Any | None = None
 
 
 class AdminRecordsResponse(BaseModel):

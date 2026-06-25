@@ -27,7 +27,7 @@ const adminMenuItems = [
     icon: BarChart3,
   },
   {
-    label: 'Analítica de modelos',
+    label: 'Análisis de modelos',
     path: '/admin/analitica-modelos',
     icon: BrainCircuit,
   },
