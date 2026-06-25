@@ -9,8 +9,8 @@ TRAINED_MODELS_DIR = BASE_DIR / "outputs" / "models"
 BACKEND_MODELS_DIR = BASE_DIR.parent / "backend" / "app" / "ml" / "models"
 
 # Cambia estos nombres cuando quieras reemplazar los modelos del prototipo.
-MODEL_1_NAME = "svm"
-MODEL_2_NAME = "xgboost"
+MODEL_1_NAME = "naive_bayes"
+MODEL_2_NAME = "svm"
 
 
 def copy_model(source_name: str, target_name: str):

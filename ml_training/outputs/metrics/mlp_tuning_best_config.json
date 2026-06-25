@@ -1,0 +1,22 @@
+{
+  "model": "mlp_tuned",
+  "hidden_layers": [
+    128,
+    64
+  ],
+  "alpha": 0.0001,
+  "activation": "tanh",
+  "learning_rate_init": 0.001,
+  "metrics": {
+    "model": "mlp_layers_128_64_alpha_0_0001_tanh_lr_0_001",
+    "hidden_layers": "(128, 64)",
+    "alpha": 0.0001,
+    "activation": "tanh",
+    "learning_rate_init": 0.001,
+    "accuracy": 0.6416184971098265,
+    "precision_macro": 0.6420199157722918,
+    "recall_macro": 0.6660398282273282,
+    "f1_macro": 0.6432199305877144,
+    "top_2_accuracy": 0.7803468208092486
+  }
+}

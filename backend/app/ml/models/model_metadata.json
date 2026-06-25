@@ -1,4 +1,4 @@
 {
-    "model_1_name": "svm",
-    "model_2_name": "xgboost"
+    "model_1_name": "naive_bayes",
+    "model_2_name": "svm"
 }

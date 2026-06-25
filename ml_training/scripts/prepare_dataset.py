@@ -42,7 +42,6 @@ COLUMN_MAP = {
 
 SINGLE_CHOICE_COLUMNS = [
     "genero",
-    "orientacion_previa",
 ]
 
 

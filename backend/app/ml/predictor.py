@@ -154,12 +154,6 @@ def build_interpretation(main_area: str, affinity: float, secondary_areas: list)
 
 
 def predict_vocai(encoded_answers: dict) -> dict:
-    """
-    Genera la recomendación usando Modelo 1 y Modelo 2.
-
-    Por ahora, el Modelo 1 se usa como referencia principal.
-    El Modelo 2 se conserva como comparación.
-    """
     X = build_feature_dataframe(encoded_answers)
 
     probabilities_model_1 = get_model_probabilities(MODEL_1, X)

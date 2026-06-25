@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, top_k_accuracy_score
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import BernoulliNB
@@ -30,13 +30,17 @@ OUTPUT_PATH = OUTPUT_DIR / "model_comparison_extra.csv"
 
 TARGET_COLUMN = "area_objetivo"
 
-# Para mantener coherencia con el entrenamiento oficial:
-# el género no se usa como entrada principal del modelo.
+# Variables que se conservan para análisis descriptivo,
+# pero no se usan como entrada del modelo.
 DROP_GENDER_FROM_MODEL = True
+DROP_ORIENTATION_FROM_MODEL = True
 
 
 def load_dataset():
     df = pd.read_csv(DATASET_PATH)
+
+    if DROP_ORIENTATION_FROM_MODEL:
+        df = df.drop(columns=["orientacion_previa"], errors="ignore")
 
     if DROP_GENDER_FROM_MODEL:
         gender_cols = [col for col in df.columns if col.startswith("genero_")]
@@ -86,6 +90,7 @@ def get_models(num_classes: int):
                     SVC(
                         kernel="rbf",
                         class_weight="balanced",
+                        probability=True,
                         random_state=42,
                     ),
                 ),
@@ -138,7 +143,7 @@ def get_models(num_classes: int):
     return models
 
 
-def evaluate_model(model_name, model, X, y_encoded):
+def evaluate_model(model_name, model, X, y_encoded, num_classes):
     min_class_count = pd.Series(y_encoded).value_counts().min()
     n_splits = min(5, min_class_count)
 
@@ -153,6 +158,14 @@ def evaluate_model(model_name, model, X, y_encoded):
         X,
         y_encoded,
         cv=cv,
+    )
+
+    y_proba = cross_val_predict(
+        model,
+        X,
+        y_encoded,
+        cv=cv,
+        method="predict_proba",
     )
 
     metrics = {
@@ -177,6 +190,12 @@ def evaluate_model(model_name, model, X, y_encoded):
             average="macro",
             zero_division=0,
         ),
+        "top_2_accuracy": top_k_accuracy_score(
+            y_encoded,
+            y_proba,
+            k=2,
+            labels=list(range(num_classes)),
+        ),
     }
 
     return metrics
@@ -191,9 +210,11 @@ def main():
     y_encoded = label_encoder.fit_transform(y)
 
     class_names = list(label_encoder.classes_)
-    models = get_models(num_classes=len(class_names))
+    num_classes = len(class_names)
 
-    print("Comparación exploratoria de modelos")
+    models = get_models(num_classes=num_classes)
+
+    print("Comparación exploratoria de 8 modelos")
     print("Columnas utilizadas:", X.shape[1])
     print("Registros utilizados:", X.shape[0])
     print("Clases:", class_names)
@@ -209,6 +230,7 @@ def main():
             model=model,
             X=X,
             y_encoded=y_encoded,
+            num_classes=num_classes,
         )
 
         results.append(metrics)
@@ -228,7 +250,7 @@ def main():
     print(results_df)
 
     print(f"\nArchivo guardado en: {OUTPUT_PATH}")
-    
+
 
 if __name__ == "__main__":
     main()
