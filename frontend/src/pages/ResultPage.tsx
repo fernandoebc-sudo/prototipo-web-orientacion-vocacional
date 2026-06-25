@@ -6,11 +6,12 @@ import {
   GraduationCap,
   Lightbulb,
   LineChart,
+  LogOut,
   RefreshCw,
   Sparkles,
   Target,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { StudentResult } from '../services/api'
 
 function getStoredResult(): StudentResult | null {
@@ -27,8 +28,22 @@ function getStoredResult(): StudentResult | null {
   }
 }
 
+function clearStudentSession() {
+  sessionStorage.removeItem('vocai_student_token')
+  sessionStorage.removeItem('vocai_student_role')
+  sessionStorage.removeItem('vocai_student_code')
+  sessionStorage.removeItem('vocai_student_email')
+  sessionStorage.removeItem('vocai_result')
+}
+
 function ResultPage() {
+  const navigate = useNavigate()
   const result = getStoredResult()
+
+  const handleAnswerWithAnotherCode = () => {
+    clearStudentSession()
+    navigate('/login-estudiante')
+  }
 
   if (!result) {
     return (
@@ -46,16 +61,16 @@ function ResultPage() {
           </h1>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Para visualizar una recomendación, primero debes completar el
-            cuestionario.
+            Para visualizar una recomendación, primero debes iniciar sesión con
+            un código de acceso y completar el cuestionario.
           </p>
 
           <Link
-            to="/cuestionario"
+            to="/login-estudiante"
             className="mt-6 inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700"
           >
             <RefreshCw size={21} />
-            Ir al cuestionario
+            Ir al acceso estudiantil
           </Link>
         </div>
       </main>
@@ -90,13 +105,14 @@ function ResultPage() {
             </div>
           </div>
 
-          <Link
-            to="/cuestionario"
+          <button
+            type="button"
+            onClick={handleAnswerWithAnotherCode}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
           >
             <ArrowLeft size={18} />
-            Volver
-          </Link>
+            Volver al acceso
+          </button>
         </div>
       </header>
 
@@ -119,8 +135,8 @@ function ResultPage() {
                 </h2>
 
                 <p className="mt-4 max-w-2xl leading-7 text-slate-600">
-                  Tus respuestas fueron procesadas por el prototipo
-                  y registradas en la base de datos. El resultado mostrado
+                  Tus respuestas fueron procesadas por el prototipo y
+                  registradas en la base de datos. El resultado mostrado
                   corresponde a una recomendación académica por área.
                 </p>
               </div>
@@ -206,13 +222,14 @@ function ResultPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Link
-              to="/cuestionario"
+            <button
+              type="button"
+              onClick={handleAnswerWithAnotherCode}
               className="inline-flex items-center justify-center gap-3 rounded-2xl border border-blue-200 bg-white px-6 py-4 font-bold text-blue-700 shadow-sm transition hover:bg-blue-50"
             >
-              <RefreshCw size={21} />
-              Realizar otra evaluación
-            </Link>
+              <LogOut size={21} />
+              Responder con otro código
+            </button>
 
             <a
               href="https://forms.gle/j4mzp4Vrp2bgzpdX7"
