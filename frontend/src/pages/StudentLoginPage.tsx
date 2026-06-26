@@ -13,6 +13,18 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import { loginStudent } from '../services/api'
 
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void
+      execute: (
+        siteKey: string,
+        options: { action: string },
+      ) => Promise<string>
+    }
+  }
+}
+
 function StudentLoginPage() {
   const navigate = useNavigate()
 
@@ -20,6 +32,27 @@ function StudentLoginPage() {
   const [accessCode, setAccessCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+
+  const getRecaptchaToken = async () => {
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+
+    if (!siteKey) {
+      throw new Error('La clave pública de reCAPTCHA no está configurada.')
+    }
+
+    if (!window.grecaptcha) {
+      throw new Error('reCAPTCHA no se ha cargado correctamente.')
+    }
+
+    return new Promise<string>((resolve, reject) => {
+      window.grecaptcha?.ready(() => {
+        window.grecaptcha
+          ?.execute(siteKey, { action: 'student_login' })
+          .then(resolve)
+          .catch(reject)
+      })
+    })
+  }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -41,7 +74,13 @@ function StudentLoginPage() {
     try {
       setIsLoading(true)
 
-      const response = await loginStudent(formattedEmail, formattedCode)
+      const recaptchaToken = await getRecaptchaToken()
+
+      const response = await loginStudent(
+        formattedEmail,
+        formattedCode,
+        recaptchaToken,
+      )
 
       sessionStorage.setItem('vocai_student_token', response.access_token)
       sessionStorage.setItem('vocai_student_role', response.role)
@@ -51,7 +90,7 @@ function StudentLoginPage() {
       navigate('/cuestionario')
     } catch {
       setErrorMessage(
-        'El correo o código ingresado no es válido, no está disponible o ya fue utilizado.',
+        'No se pudo validar el acceso. Revisa el correo, el código o intenta nuevamente.',
       )
     } finally {
       setIsLoading(false)
@@ -197,11 +236,12 @@ function StudentLoginPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-bold text-blue-700">Paso 1</p>
               <h4 className="mt-1 font-bold text-slate-950">
-                Ingresar con correo y código
+                Ingresar con correo, código y verificación
               </h4>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                El estudiante utiliza el correo institucional al que se envió el
-                código de acceso generado por el administrador.
+                El estudiante utiliza el correo institucional y el código de
+                acceso generado por el administrador. Además, se ejecuta una
+                verificación reCAPTCHA para proteger el ingreso.
               </p>
             </div>
 

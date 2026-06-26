@@ -217,17 +217,22 @@ export async function loginAdmin(
 export async function loginStudent(
   email: string,
   code: string,
+  recaptchaToken: string,
 ): Promise<LoginResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/student-login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ email, code }),
+    body: JSON.stringify({
+      email,
+      code,
+      recaptcha_token: recaptchaToken,
+    }),
   })
 
   if (!response.ok) {
-    throw new Error('Correo o código de acceso inválido o no disponible')
+    throw new Error('Error al iniciar sesión como estudiante')
   }
 
   return response.json()

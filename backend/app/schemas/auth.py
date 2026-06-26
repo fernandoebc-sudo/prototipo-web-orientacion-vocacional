@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class CreateAdminRequest(BaseModel):
@@ -12,8 +12,9 @@ class AdminLoginRequest(BaseModel):
 
 
 class StudentLoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     code: str
+    recaptcha_token: str
 
 
 class CreateStudentAccessCodeRequest(BaseModel):

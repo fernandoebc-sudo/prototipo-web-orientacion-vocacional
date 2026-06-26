@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
+from app.services.recaptcha_service import verify_recaptcha_token
 from app.core.security import require_admin
 from app.db.database import get_db
 from app.schemas.auth import (
@@ -42,10 +42,12 @@ def admin_login(
 
 
 @router.post("/student-login", response_model=TokenResponse)
-def student_login(
-    data: StudentLoginRequest,
-    db: Session = Depends(get_db),
-):
+def login_student(data: StudentLoginRequest, db: Session = Depends(get_db)):
+    verify_recaptcha_token(
+        token=data.recaptcha_token,
+        expected_action="student_login",
+    )
+
     return validate_student_access_code(db, data.email, data.code)
 
 

@@ -1,11 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>VocAI</title>
+
+    <script>
+      const recaptchaSiteKey = '%VITE_RECAPTCHA_SITE_KEY%'
+      const script = document.createElement('script')
+      script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+    </script>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
